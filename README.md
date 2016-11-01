@@ -34,3 +34,7 @@ To generate an XCode project, use `vapor xcode`
 
 ## Access
 API endpoint is located at https://dont-shoot-the-messenger.herokuapp.com
+
+## Collaborators
+* Travis Young [(github)](https://github.com/tyoung31)
+* Karol Paduch [(github)](https://github.com/DARKUNIT22)
