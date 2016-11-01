@@ -31,3 +31,6 @@ This is a collection of text based puzzle/adventure games implemented to be acce
 
 ## Usage
 To generate an XCode project, use `vapor xcode`
+
+## Access
+API endpoint is located at https://dont-shoot-the-messenger.herokuapp.com
