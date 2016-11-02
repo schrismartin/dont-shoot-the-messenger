@@ -10,3 +10,5 @@ install:
 script:
   - swift build
   - swift build -c release
+notifications:
+  slack: tck-trifecta:LMEPov8sXMfYNDp2zbeF1sRM
