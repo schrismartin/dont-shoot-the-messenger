@@ -6,6 +6,6 @@ sudo: required
 dist: trusty
 osx_image: xcode8
 script:
-  - eval "$(curl -sL https://swift.vapor.sh/codecov)"
+  - eval "$(curl -sL https://swift.vapor.sh/ci)"
 notifications:
   slack: tck-trifecta:LMEPov8sXMfYNDp2zbeF1sRM
