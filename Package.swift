@@ -2,6 +2,9 @@ import PackageDescription
 
 let package = Package(
     name: "dont-shoot-the-messenger",
+    targets: [
+        Target(name: "App", dependencies: ["Library"]),
+    ],
     dependencies: [
         .Package(url: "https://github.com/vapor/vapor.git", majorVersion: 1, minor: 1)
     ],
@@ -11,7 +14,5 @@ let package = Package(
         "Localization",
         "Public",
         "Resources",
-        "Tests",
     ]
 )
-
