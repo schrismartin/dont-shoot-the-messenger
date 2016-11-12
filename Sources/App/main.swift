@@ -31,7 +31,7 @@ drop.get("/fbwebhook") { request in
     }
 }
 
-let PAGE_ACCESS_TOKEN = "EAATAd74WSvYBALSBCAokBXjsaI1iLBL5qnZC9EqrupsKkfyluDZAZAoetN6ehZCWwlb4fM2UYXjkWo5xJdSkwn8DttqhobpU32ZBYRUZAgEtETAlI7m5wK31kyG3Px7ISCLDzfn09skTxjc4J9BwU5elSuXnDxZBIiSfIC0Ak2t4QZDZD"
+let PAGE_ACCESS_TOKEN = "EAATAd74WSvYBAFpstWfFB1fp3OJbqhL2lb1MddvxqxoduD23YqgdA1C5VXNKBBFR8qHTIMFcTEkzAqC5bZCLKZBPolvOitVxvqsxX3cHSE0KTF8Mq6URz8i3OdTivk2iQQikk99GTrIir1zvvXasyd9ZA6Y4rMhEPya61TO7QZDZD"
 
 drop.post("fbwebhook") { request in
 
@@ -88,17 +88,11 @@ drop.post("fbwebhook") { request in
     let res = try drop.client.post(url,
                                    headers: ["Content-Type":"application/json"],
                                    query: [:],
-                                   body: try Body(JSON(node: [
-                                    "message" : [
-                                        "text" : "Hello"
-                                    ],
-                                    "recipient" : [
-                                        "id": senderId
-                                    ]
-                                    ])))
+                                   body: try Body(payload))
+    
     print(res)
     
-    let response = try Response(status: .ok, json: try JSON(node: Node(["echo":messageText])))
+    let response = try Response(status: .ok, json: try JSON(bytes: res.body.bytes!))
     return response
 }
 
