@@ -79,6 +79,8 @@ drop.post("fbwebhook") { request in
             ["id" : senderId]
     ]
     
+    print(rawPayload)
+    
     let response = Response(status: .ok, body: JSON(rawPayload))
     response.headers["Content-Type"] = "application/json"
     return response
