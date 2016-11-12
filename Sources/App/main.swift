@@ -9,12 +9,14 @@ drop.get { req in
     ])
 }
 
-drop.get("fbwebhook") { request in
+drop.get("/fbwebhook") { request in
     print("get webhook")
     guard let token = request.data["hub.verify_token"]?.string else {
+        return "BAD REQUEST"
         throw Abort.badRequest
     }
     guard let res = request.data["hub.challenge"]?.string else {
+        return "BAD REQUEST"
         throw Abort.badRequest
     }
     
