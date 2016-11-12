@@ -72,17 +72,28 @@ drop.post("fbwebhook") { request in
     }
     
     // Create returned payload
-    let rawPayload: Node = [
-        "message" :
-            ["text" : messageText],
-        "recipient" :
-            ["id" : senderId]
-    ]
+    let payload = JSON([
+            "message" :
+                ["text" : messageText],
+            "recipient" :
+                ["id" : senderId]
+            ])
     
-    print(rawPayload)
+    // Construct return query
+    var urlRequest = URLRequest(url: URL(string: url)!)
+    urlRequest.httpMethod = "POST"
+    urlRequest.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+    urlRequest.httpBody = Data(try payload.makeBytes())
     
-    let response = Response(status: .ok, body: JSON(rawPayload))
-    response.headers["Content-Type"] = "application/json"
+    let session = URLSession.shared
+    let task = session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
+        if let err = error {
+            return
+        }
+    })
+    task.resume()
+    
+    let response = try Response(status: .ok, json: try JSON(node: Node([:])))
     return response
 }
 
