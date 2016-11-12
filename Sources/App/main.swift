@@ -40,11 +40,13 @@ drop.post("fbwebhook") { request in
         return Response(status: .badRequest, body: "Did not receive message with valid body")
     }
     
+    print(try data.string())
+    
     // Get entry subarray
     let json: JSON = try JSON(bytes: data)
     
     guard let entryArray = json["entry"]?.array as? [JSON] else {
-        return Response(status: .badRequest, body: "Payload lacking an 'entry' field")
+        return Response(status: .badRequest , body: "Payload lacking an 'entry' field")
     }
     
     let entry: JSON = entryArray[0]
@@ -68,7 +70,7 @@ drop.post("fbwebhook") { request in
     
     // Get message text
     guard let messageText = messageJson["text"]?.node else {
-        return Response(status: .badRequest, body: "Payload lacking a 'message' field")
+        return Response(status: .ok, body: "Payload lacking a 'message' field")
     }
     
     // Create returned payload
@@ -90,7 +92,7 @@ drop.post("fbwebhook") { request in
                                    query: [:],
                                    body: try Body(payload))
     
-    print(res)
+    print(try Data(res.body.bytes!).string())
     
     let response = try Response(status: .ok, json: try JSON(bytes: res.body.bytes!))
     return response
