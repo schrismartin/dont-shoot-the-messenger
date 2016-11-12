@@ -9,6 +9,24 @@ drop.get { req in
     ])
 }
 
+drop.get("fbwebhook") { request in
+    print("get webhook")
+    guard let token = request.data["hub.verify_token"]?.string else {
+        throw Abort.badRequest
+    }
+    guard let res = request.data["hub.challenge"]?.string else {
+        throw Abort.badRequest
+    }
+    
+    if token == "2318934571" {
+        print("send response")
+
+        return res
+    } else {
+        return "Invalid Token"
+    }
+}
+
 drop.resource("posts", PostController())
 
 drop.run()
