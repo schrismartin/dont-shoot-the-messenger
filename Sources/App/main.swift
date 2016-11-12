@@ -35,7 +35,7 @@ let PAGE_ACCESS_TOKEN = "EAATAd74WSvYBALSBCAokBXjsaI1iLBL5qnZC9EqrupsKkfyluDZAZA
 
 drop.post("fbwebhook") { request in
     print("Start")
-    let url = "https://graph.facebook.com/v2.6/me/messages?access_token=" + PAGE_ACCESS_TOKEN
+    let url = "https://graph.facebook.com/v2.8/me/messages?access_token=" + PAGE_ACCESS_TOKEN
     guard let data = request.body.bytes else {
         return Response(status: .badRequest, body: "Did not receive message with valid body")
     }
@@ -88,12 +88,14 @@ drop.post("fbwebhook") { request in
     let session = URLSession.shared
     let task = session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
         if let err = error {
+            print("We had a problem")
             return
         }
+        print(response)
     })
     task.resume()
     
-    let response = try Response(status: .ok, json: try JSON(node: Node([:])))
+    let response = try Response(status: .ok, json: try JSON(node: Node(["echo":messageText])))
     return response
 }
 
