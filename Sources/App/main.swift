@@ -34,7 +34,7 @@ drop.get("/fbwebhook") { request in
 let PAGE_ACCESS_TOKEN = "EAATAd74WSvYBALSBCAokBXjsaI1iLBL5qnZC9EqrupsKkfyluDZAZAoetN6ehZCWwlb4fM2UYXjkWo5xJdSkwn8DttqhobpU32ZBYRUZAgEtETAlI7m5wK31kyG3Px7ISCLDzfn09skTxjc4J9BwU5elSuXnDxZBIiSfIC0Ak2t4QZDZD"
 
 drop.post("fbwebhook") { request in
-    print("Start")
+
     let url = "https://graph.facebook.com/v2.8/me/messages?access_token=" + PAGE_ACCESS_TOKEN
     guard let data = request.body.bytes else {
         return Response(status: .badRequest, body: "Did not receive message with valid body")
@@ -85,15 +85,18 @@ drop.post("fbwebhook") { request in
     urlRequest.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
     urlRequest.httpBody = Data(try payload.makeBytes())
     
-    let session = URLSession.shared
-    let task = session.dataTask(with: urlRequest, completionHandler: { (data, response, error) in
-        if let err = error {
-            print("We had a problem")
-            return
-        }
-        print(response)
-    })
-    task.resume()
+    let res = try drop.client.post(url,
+                                   headers: ["Content-Type":"application/json"],
+                                   query: [:],
+                                   body: try Body(JSON(node: [
+                                    "message" : [
+                                        "text" : "Hello"
+                                    ],
+                                    "recipient" : [
+                                        "id": senderId
+                                    ]
+                                    ])))
+    print(res)
     
     let response = try Response(status: .ok, json: try JSON(node: Node(["echo":messageText])))
     return response
