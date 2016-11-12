@@ -1,5 +1,7 @@
 import Vapor
 import Library
+import HTTP
+import Foundation
 
 let drop = Droplet()
 
@@ -27,6 +29,59 @@ drop.get("/fbwebhook") { request in
     } else {
         return "Invalid Token"
     }
+}
+
+let PAGE_ACCESS_TOKEN = "EAATAd74WSvYBALSBCAokBXjsaI1iLBL5qnZC9EqrupsKkfyluDZAZAoetN6ehZCWwlb4fM2UYXjkWo5xJdSkwn8DttqhobpU32ZBYRUZAgEtETAlI7m5wK31kyG3Px7ISCLDzfn09skTxjc4J9BwU5elSuXnDxZBIiSfIC0Ak2t4QZDZD"
+
+drop.post("fbwebhook") { request in
+    print("Start")
+    let url = "https://graph.facebook.com/v2.6/me/messages?access_token=" + PAGE_ACCESS_TOKEN
+    guard let data = request.body.bytes else {
+        return Response(status: .badRequest, body: "Did not receive message with valid body")
+    }
+    
+    // Get entry subarray
+    let json: JSON = try JSON(bytes: data)
+    
+    guard let entryArray = json["entry"]?.array as? [JSON] else {
+        return Response(status: .badRequest, body: "Payload lacking an 'entry' field")
+    }
+    
+    let entry: JSON = entryArray[0]
+    
+    // Get messaging array
+    guard let messageArray = entry["messaging"]?.array as? [JSON] else {
+        return Response(status: .badRequest, body: "Payload lacking a 'messaging' field")
+    }
+    
+    let messagingJson = messageArray[0]
+    
+    // Get message object
+    guard let messageJson = try messagingJson["message"]?.makeJSON() else {
+        return Response(status: .badRequest, body: "Payload lacking a 'message' field")
+    }
+    
+    // Get sender id
+    guard let sender = try messagingJson["sender"]?.makeJSON(), let senderId = sender["id"]?.node else {
+        return Response(status: .badRequest, body: "Payload lacking a 'sender' field")
+    }
+    
+    // Get message text
+    guard let messageText = messageJson["text"]?.node else {
+        return Response(status: .badRequest, body: "Payload lacking a 'message' field")
+    }
+    
+    // Create returned payload
+    let rawPayload: Node = [
+        "message" :
+            ["text" : messageText],
+        "recipient" :
+            ["id" : senderId]
+    ]
+    
+    let response = Response(status: .ok, body: JSON(rawPayload))
+    response.headers["Content-Type"] = "application/json"
+    return response
 }
 
 drop.resource("posts", PostController())
