@@ -11,7 +11,6 @@ public class Food: Item {
                 eatText = ""
                 hungerValue = 0;
                 thirstValue = 0;
-
         }
 }
 
@@ -109,6 +108,7 @@ public class RawFish: Food {
                 hungerValue = -3
                 thirstValue = -5
                 name = "Raw Fish"
+                keywords ["Campfire"] = "Cooked_Fish"
         }
 }
 public class DirtyWater: Food {
@@ -131,7 +131,7 @@ public class Fish: Food {
                 isRaw = false
                 hungerValue = 3
                 thirstValue = 0
-                name = "Cooked Fish"
+                name = "Cooked_Fish"
         }
 }
 public class BoiledWater: Food {
@@ -141,7 +141,7 @@ public class BoiledWater: Food {
                 isPoisonous = false
                 hungerValue = 0
                 thirstValue = 5
-                name = "Boiled Water"
+                name = "Boiled_Water"
         }
 }
 
