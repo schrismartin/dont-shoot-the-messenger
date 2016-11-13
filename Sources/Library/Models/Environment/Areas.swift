@@ -8,7 +8,6 @@ public class Area {
 	public var enterText: String
 	public var lookText: String
 	public var rejectionText: String
-//	public var lookText: String
 	public var visits: Int
 	public var eConditionI: Item? //compare if player inventory quantity is greater than needed
 	public var eConditionW: String? //compare if equal to
@@ -50,7 +49,7 @@ public extension Area {
             "inventory" : ~inv,
             "paths" : ~paths,
             "enterText": ~enterText,
-            "generalText": ~generalText,
+            "generalText": ~lookText,
             "eConditionI": ~(eConditionI?.name ?? "nil"),
             "eConditionW": ~(eConditionW ?? "nil"),
             "eConditionE": ~(eConditionE?.name ?? "nil")
@@ -62,7 +61,7 @@ public extension Area {
 }
 
 public extension Area {
-    public convenience init(id: ObjectId, inventory: [(String, Int)], paths: Set<Area>, enterText: String, generalText: String, name: String) {
+    public convenience init(id: ObjectId, inventory: [(String, Int)], paths: Set<Area>, enterText: String, lookText: String, name: String) {
         self.init()
         
         self.id = id
@@ -75,7 +74,7 @@ public extension Area {
         
         self.enterText = enterText
         
-        self.generalText = generalText
+        self.lookText = lookText
         
         self.name = name
     }

@@ -1,32 +1,27 @@
 public class Cloth: Item {
-	public init(quantity: Int){
+	public override init(quantity: Int){
 		super.init(quantity: quantity)
 		keywords ["Stick"] = "Torch"
 	}
 }
+
 public class Flint: Item {
-	public init(quantity: Int){
+	public override init(quantity: Int){
 		super.init(quantity: quantity)
 		keywords ["Torch"] = "Lit_Torch"
 	}
 }
-public class Stick: Item {
-	public init(quantity: Int){
-		super.init(quantity: quantity)
-		keywords ["Cloth"] = "Torch"
-//		keywords ["Flint"] = "Campfire"
-	}
 
 public class Stick: Item {
 	public override init(quantity: Int){
 		super.init(quantity: quantity)
 		keywords ["Cloth"] = "Torch"
-		keywords ["Flint"] = "Campfire"
+//		keywords ["Flint"] = "Campfire"
 	}
 }
 
 public class Map: Item {
-    public init(quantity: Int){
+    public override init(quantity: Int){
 		super.init(quantity: quantity)
 	}
 }
@@ -38,8 +33,9 @@ public class Torch: Item {
 	}
 }
 
+
 public class LitTorch: Item {
-    public init(quantity: Int){
+    public override init(quantity: Int){
 		super.init(quantity: quantity)
 	}
 }
@@ -47,17 +43,13 @@ public class LitTorch: Item {
 
 /*-------------------------------------*/
 public class Journal: Item {
-	public init(quantity: Int){
+	public override init(quantity: Int){
 		super.init(quantity: quantity)
 	}
 }
-public class Map: Item {
-	public init (quantity: Int){
-		super.init(quantity: quantity)
-	}
-}
+    
 public class Key: Item {
-	public init (quantity: Int){
+	public override init (quantity: Int){
 		super.init(quantity: quantity)
 	}
 }

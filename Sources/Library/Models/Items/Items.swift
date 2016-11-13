@@ -40,32 +40,12 @@ public class Item: Hashable {
             case "Torch": return Torch(quantity: quantity)
             case "Lit_Torch": return LitTorch(quantity: quantity)
             case "Key": return Key(quantity: quantity)
+            case "Journal": return Journal(quantity: quantity)
+            case "Cloth": return Cloth(quantity: quantity)
+            case "Flint": return Flint(quantity: quantity)
             default: return nil
         }
     }
-
-	public static func new(name: String, quantity: Int) -> Item {
-		switch name {
-			case "Stick":
-				return Stick(quantity: quantity)
-			case "Map":
-				return Map(quantity: quantity)
-			case "Torch":
-				return Torch(quantity: quantity)
-			case "Lit_Torch":
-				return LitTorch(quantity: quantity)
-			case "Key":
-				return Key(quantity: quantity)
-			case "Journal":
-				return Journal(quantity: quantity)
-			case "Cloth":
-				return Cloth(quantity: quantity)
-			case "Flint":
-				return Flint(quantity: quantity)
-			default :
-				return Item()
-		}
-	}
 
 	func use() -> Bool {
 		if quantity > 0 {
