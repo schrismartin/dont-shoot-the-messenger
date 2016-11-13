@@ -1,6 +1,7 @@
 import Vapor
 import Fluent
 import Foundation
+import MongoKitten
 
 let input = "Light the torch"
 let verb = "light"
@@ -62,6 +63,22 @@ public class Item: Hashable {
 		self.quantity = quantity
 	}
 }
+
+public extension Item {
+    public var value: Value {
+        return ["name": ~self.name, "quantity": ~self.quantity] as Value
+    }
+    
+    public static func new(fromValue value: Value) -> Item? {
+        let doc = value.document
+        
+        let name = doc["name"].string
+        let quantity = doc["quantity"].int
+        
+        return Item.new(item: name, quantity: quantity)
+    }
+}
+
 public protocol Responder{
 
 }

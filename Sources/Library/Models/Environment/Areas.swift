@@ -4,7 +4,7 @@ public class Area {
     public var id: ObjectId
 	public var name: String
 	public var inventory: Set<Item>
-	public var paths: Set<Area>
+	public var paths: Set<ObjectId>
 	public var enterText: String
 	public var lookText: String
 	public var rejectionText: String
@@ -21,7 +21,8 @@ public class Area {
                      "Key"]
         
         id = ObjectId()
-        inventory = Set(items.map { Item.new(item: $0, quantity: 0)! })
+        let temp = items.map { Item.new(item: $0, quantity: 0)! }
+        inventory = Set(temp)
 		paths = []
 		enterText = ""
 		lookText = ""
@@ -34,14 +35,46 @@ public class Area {
 // Add a document calculated property for easy database storage
 public extension Area {
     
-    public var databaseEntry: Document {
-        let inventory = self.inventory.map {
-            ["name": ~$0.name, "quantity": ~$0.quantity] as Value
-        }
+    public convenience init?(document: Document) {
+        self.init()
         
-        let inv = Document(array: inventory)
+        self.id = document["_id"].objectIdValue!
+        self.name = document["name"].string
         
-        let paths = Document(array: self.paths.map { Value(stringLiteral: $0.id.hexString) })
+        // get inventory
+        let inv = document["inventory"].storedValue as! Document
+        let arr = inv.arrayValue
+
+//        self.inventory = Set(invArr)
+        
+        // get paths
+        let paths = document["paths"].storedValue as! Document
+        let values = paths.arrayValue
+        do {
+            self.paths = Set( values.map { $0.objectIdValue! } )
+        } catch { return nil }
+        
+        self.enterText = document["enterText"].string
+        self.lookText = document["lookText"].string
+        self.rejectionText = document["rejectionText"].string
+        self.visits = document["visits"].int
+        
+        var temp = document["eConditionI"].value.makeBsonValue()
+        self.eConditionI = temp.string == "nil" ? nil : Item.new(fromValue: temp)
+        
+        temp = document["eConditionW"].value.makeBsonValue()
+        self.eConditionW = temp.string
+        
+        temp = document["eConditionE"].value.makeBsonValue()
+        self.eConditionE = temp.string == "nil" ? nil : Item.new(fromValue: temp)
+        
+    }
+    
+    public var document: Document {
+        
+        let inv = Document(array: self.inventory.map { $0.value })
+        
+        let paths = Document(array: self.paths.map { Value(stringLiteral: $0.hexString) })
         
         let areaDoc: Document = [
             "_id" : ~id,
@@ -49,19 +82,21 @@ public extension Area {
             "inventory" : ~inv,
             "paths" : ~paths,
             "enterText": ~enterText,
-            "generalText": ~lookText,
+            "lookText": ~lookText,
+            "rejectionText": ~rejectionText,
+            "visits": ~visits,
             "eConditionI": ~(eConditionI?.name ?? "nil"),
             "eConditionW": ~(eConditionW ?? "nil"),
             "eConditionE": ~(eConditionE?.name ?? "nil")
         ]
         
-        
         return areaDoc
     }
 }
 
+
 public extension Area {
-    public convenience init(id: ObjectId, inventory: [(String, Int)], paths: Set<Area>, enterText: String, lookText: String, name: String) {
+    public convenience init(id: ObjectId = ObjectId(), name: String, inventory: [(String, Int)] = [], paths: Set<ObjectId> = Set<ObjectId>(), enterText: String, lookText: String, rejectionText: String, visits: Int = 0) {
         self.init()
         
         self.id = id
