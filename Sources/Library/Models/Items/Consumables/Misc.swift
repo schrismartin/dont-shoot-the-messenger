@@ -1,18 +1,39 @@
 // Cloth
 // Flint
 // Rock
-// Stick
 public class Stick: Item {
-	override init(){
+	public override init(){
 		super.init()
 		keywords ["Cloth"] = "Torch"
 		keywords ["Flint"] = "Campfire"
+	}
+	public init(x:Int){
+		super.init()
+		quantity = x;
+	}
+}
+public class Map: Item {
+	public init (x: Int){
+		super.init()
+		quantity = x
+	}
+}
+public class Torch: Item {
+	public override init(){
+		super.init() 
+		keywords ["Flint"] = "Lit_Torch"
+	}
+}
+public class LitTorch: Item {
+	public init(x :Int){
+		super.init()
+		quantity = x
 	}
 }
 public class Key: Item {
 	public init(x :Int){
 		super.init()
-		quantity = 1
+		quantity = x
 	}
 }
 // Vines
