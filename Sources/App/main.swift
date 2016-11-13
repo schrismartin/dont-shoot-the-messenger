@@ -12,6 +12,14 @@ func buildAreas(){
     let building = Area()
     let cellar = Area()
     
+    //Set names
+    forest.name = "The Forest"
+    cave.name = "The Dark Cavern"
+    riddleRoom.name = "The Chamber of the Riddle Master"
+    spiritTree.name = "The Sacred Grove"
+    building.name = "Old Shack"
+    cellar.name = "The Dank Cellar"
+
     //Set paths between areas
     forest.paths.append(spiritTree)
     forest.paths.append(cave)
@@ -28,7 +36,6 @@ func buildAreas(){
     riddleRoom.paths.append(cave)
 
     /*---set enter conditions---*/
-    
     //No Forest Enter Conditions
     
     //building
@@ -42,9 +49,50 @@ func buildAreas(){
     //spiritTree
     spiritTree.eConditionI = Map(quantity: 1)
 
-    /*-----Fill Flavor Text------*/
+    /*-----Fill First Entery Flavor Text------*/
+    //Forest
+    forest.enterText = "You find yourself in a wooded area. The sun shines bright through the leaves and warms your face. What brought you here? You can't remember. You should LOOK AROUND and try to get a lay of the land."
+    //building
+    building.enterText = "You insert the key you found into the shacks lock. The rusty sounds of tumblers turning is music to your ears. The door opens to reveal a small dusty room."
+    //cave
+    cave.enterText = "You enter into the cave. It twists and turns for some time before opening opening into a large chamber. As you step forward the earth shakes while the wall shifts to form a rocky face.\n\nGreetings small one! It has been some time since someone has visited me."
+    //riddleRoom
+    riddleRoom.enterText = "The mouth of the door opens wide making a gateway for you to enter. Upon entering you find yourself in a quant study."
+    //cellar
+    cellar.enterText = "You climb down a rotting staircase into the cellar. The air is stale and tickles your throat as you inhale."
+    //spiritTree
+    spiritTree.enterText = "You win the game."
+    /*-----Fill Look around Flavor Text------*/
+   //Forest
+    forest.lookText = "A survey of the area reveals a small shack with curtained windows, a cave near the cliffside, and a path leading deeper into a heavily overgrown part of the woods."
+    //building
+    building.lookText = "Looking around you see tattered sheets covering the windows. The floor looks to be made out of loose sticks. As you walk around you get the feel that you could easily pick up some of the sticks."
+    //cave
+    cave.lookText = "When you look around you notice a skeleton propped against the wall with a glimmering key hanging from its neck."
+    //riddleRoom
+    riddleRoom.lookText = "You notice a scroll on a desk in the study"
+    //cellar
+    cellar.lookText = "The cellar is filled with barrels. Most of which are broken. The ones that aren't are unfortuantely empty. On the "
+    //spiritTree
+    spiritTree.lookText = "You done now. Leave"
+    
+    /*---Initialize Rejection text---*/
 
-    //No Forest Enter Conditions
+    //Forest
+    forest.rejectionText = "This shouldn't happen."
+    //building
+    building.rejectionText = "The door is locked"
+    //cave
+    cave.rejectionText = "I'm not going in there it's too dark"
+    //riddleRoom
+    riddleRoom.rejectionText = "HA! Wrong! C'mon give it another go!"
+    //cellar
+    cellar.rejectionText = "You can't do that."
+    //spiritTree
+    spiritTree.rejectionText = "You walk down the path for what feels like hours before stepping out of the woods seemingly right where you started. You must have gotten turned around somewhere."
+    /*---Initialize Setting Enventory---*/
+
+    //Forest
     
     //building
  
@@ -55,11 +103,6 @@ func buildAreas(){
     //cellar
    
     //spiritTree
-
-    /*--------------------------------*/
-
-
-
 
 }
 

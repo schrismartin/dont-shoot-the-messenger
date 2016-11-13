@@ -2,6 +2,17 @@ import Vapor
 import Fluent
 import Foundation
 
+let input = "Light the torch"
+let verb = "light"
+let object = "torch"
+
+/*if let lightableObject = Item.new(name: object, quantity: 2) as? Lightable {
+	lightableObject.light()
+} else {
+	print("You can't do that, silly!")
+}
+*/
+
 
 public class Item: Hashable {
 	public var name: String
@@ -20,6 +31,23 @@ public class Item: Hashable {
 
 	public static func ==(lhs: Item, rhs: Item) -> Bool {
 		return lhs.hashValue == rhs.hashValue
+	}
+
+	public static func new(name: String, quantity: Int) -> Item {
+		switch name {
+			case "Stick":
+				return Stick(quantity: quantity)
+			case "Map":
+				return Map(quantity: quantity)
+			case "Torch":
+				return Torch(quantity: quantity)
+			case "Lit_Torch":
+				return LitTorch(quantity: quantity)
+			case "Key":
+				return Key(quantity: quantity)
+			default :
+				return Item()
+		}
 	}
 
 	func use() -> Bool {

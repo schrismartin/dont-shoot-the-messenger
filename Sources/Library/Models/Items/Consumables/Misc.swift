@@ -19,7 +19,7 @@ public class Map: Item {
 	}
 }
 public class Torch: Item {
-	public override init(){
+	public init(quantity: Int){
 		super.init() 
 		keywords ["Flint"] = "Lit_Torch"
 	}
