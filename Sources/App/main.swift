@@ -44,7 +44,7 @@ func buildAreas(){
     //cave
     cave.eConditionI = LitTorch(quantity: 1)
     //riddleRoom
-    riddleRoom.eConditionW = "Answer"
+    riddleRoom.eConditionW = "franky"
     //cellar
     cellar.eConditionE = Stick(quantity: 5)
     //spiritTree
@@ -92,17 +92,18 @@ func buildAreas(){
     //spiritTree
     spiritTree.rejectionText = "You walk down the path for what feels like hours before stepping out of the woods seemingly right where you started. You must have gotten turned around somewhere."
     /*---Initialize Setting Enventory---*/
-
     //Forest
-    
+    forest.inventory.insert(Item.new(item: "flint", quantity: 1)!)
+    forest.inventory.insert(Item.new(item: "stick", quantity: 1)!)
+    forest.inventory.insert(Item.new(item: "cloth", quantity: 1)!)
     //building
- 
+    building.inventory.insert(Item.new(item: "stick", quantity: 15)!)
     //cave
-    
+    cave.inventory.insert(Item.new(item: "key", quantity: 1)!)
     //riddleRoom
-
+    riddleRoom.inventory.insert(Item.new(item: "map", quantity: 1)!)
     //cellar
-   
+    cellar.inventory.insert(Item.new(item: "journal", quantity: 1)!)
     //spiritTree
 
 }
@@ -188,6 +189,15 @@ drop.post("fbwebhook") { request in
     let handler = SCMMessageHandler(drop: drop)
     let message = try handler.handle(json: json)
     
+    // temp player and area objects
+    let player = Player()
+    let area = Area()
+
+//    parse(input: message,player: player,area: area)
+
+    let test: [String] = ["this is a TEST file to see if i can use this","And another one"]
+    parse(input: test,player: player,area: area)
+
     print("Things worked out")
     return Response(status: .ok, body: "Things worked out")
 }

@@ -14,11 +14,15 @@ public class Area {
 	public var eConditionE: Item? // compare if current environment quantity is less than needed
 
 	public init(){
-        let items = ["Stick",
-                     "Map",
-                     "Torch",
-                     "Lit_Torch",
-                     "Key"]
+        let items = ["stick",
+                     "map",
+                     "torch",
+                     "lit_torch",
+                     "key", 
+            		 "journal",
+            		 "cloth",            
+            		 "flint"
+                     ]
         
         id = ObjectId()
         inventory = Set(items.map { Item.new(item: $0, quantity: 0)! })

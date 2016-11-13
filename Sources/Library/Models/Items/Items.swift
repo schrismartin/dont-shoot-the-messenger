@@ -16,6 +16,8 @@ let object = "torch"
 
 public class Item: Hashable {
 	public var name: String
+	public var pickupText: String
+	public var desctiption: String
 	public var id: Int {
 		return name.hashValue
 	}
@@ -35,14 +37,14 @@ public class Item: Hashable {
     
     public static func new(item: String, quantity: Int) -> Item? {
         switch item {
-            case "Stick": return Stick(quantity: quantity)
-            case "Map": return Map(quantity: quantity)
-            case "Torch": return Torch(quantity: quantity)
-            case "Lit_Torch": return LitTorch(quantity: quantity)
-            case "Key": return Key(quantity: quantity)
-            case "Journal": return Journal(quantity: quantity)
-            case "Cloth": return Cloth(quantity: quantity)
-            case "Flint": return Flint(quantity: quantity)
+            case "stick": return Stick(quantity: quantity)
+            case "map": return Map(quantity: quantity)
+            case "torch": return Torch(quantity: quantity)
+            case "lit_Torch": return LitTorch(quantity: quantity)
+            case "key": return Key(quantity: quantity)
+            case "journal": return Journal(quantity: quantity)
+            case "cloth": return Cloth(quantity: quantity)
+            case "flint": return Flint(quantity: quantity)
             default: return nil
         }
     }
@@ -58,6 +60,8 @@ public class Item: Hashable {
     
     public init(quantity: Int){
 		name = ""
+		pickupText = ""	
+		desctiption = ""
 		keywords = [:]
 		self.quantity = quantity
 	}

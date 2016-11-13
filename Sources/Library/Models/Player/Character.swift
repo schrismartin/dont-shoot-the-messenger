@@ -47,14 +47,14 @@ public class Player {
 
 	}
 	//should have startig parameters from the database of progress to construct current inventory
-	init (inventory: [Item], health: Int, hunger: Int, hydration: Int, dead: Bool){
+	public init (inventory: [Item], health: Int, hunger: Int, hydration: Int, dead: Bool){
 		self.inventory = inventory
 		self.health = health
 		self.hunger = hunger
 		self.hydration = hydration
 		self.dead = dead
 	}
-	init (){
+	public init (){
 		inventory = []
 		health = Player.maxStat
 		hunger = Player.maxStat
