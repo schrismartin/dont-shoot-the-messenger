@@ -7,16 +7,18 @@ public class Food: Item {
         public func eat() {
                 quantity -= 1
         }
-        override init () {
-                eatText = ""
-                hungerValue = 0;
-                thirstValue = 0;
+    override init (quantity: Int) {
+        eatText = ""
+        hungerValue = 0;
+        thirstValue = 0;
+        super.init(quantity: quantity)
+        
         }
 }
 
 public class Apple: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 hungerValue = 2
                 thirstValue = 1
@@ -25,8 +27,8 @@ public class Apple: Food {
 }
 
 public class Nuts: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 hungerValue = 1
                 thirstValue = -1
@@ -34,8 +36,8 @@ public class Nuts: Food {
         }
 }
 public class Pear: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 hungerValue = 2
                 thirstValue = 1
@@ -43,8 +45,8 @@ public class Pear: Food {
         }
 }
 public class Berries: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 isPoisonous = false
                 hungerValue = 1
@@ -53,8 +55,8 @@ public class Berries: Food {
         }
 }
 public class PoisonBerries: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 isPoisonous = true
                 hungerValue = -1
@@ -63,8 +65,8 @@ public class PoisonBerries: Food {
         }
 }
 public class Mushrooms: Food{
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 isPoisonous = false
                 hungerValue = 1
@@ -73,8 +75,8 @@ public class Mushrooms: Food{
         }
 }
 public class PoisonMushrooms: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 isPoisonous = true
                 hungerValue = -1
@@ -83,8 +85,8 @@ public class PoisonMushrooms: Food {
         }
 }
 public class Moss: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 hungerValue = 0
                 thirstValue = 1
@@ -92,8 +94,8 @@ public class Moss: Food {
         }
 }
 public class Tubers: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 hungerValue = 2
                 thirstValue = 0
@@ -101,8 +103,8 @@ public class Tubers: Food {
         }
 }
 public class RawFish: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 isRaw = true
                 hungerValue = -3
@@ -112,8 +114,8 @@ public class RawFish: Food {
         }
 }
 public class DirtyWater: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 eatText = "You eat the (food). It (makes you feel ____)."
                 isRaw = true
                 isPoisonous = true
@@ -126,8 +128,8 @@ public class DirtyWater: Food {
 
 //CRAFTABLE-----------------------------------------------------
 public class Fish: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 isRaw = false
                 hungerValue = 3
                 thirstValue = 0
@@ -135,8 +137,8 @@ public class Fish: Food {
         }
 }
 public class BoiledWater: Food {
-        override init () {
-                super.init()
+        override init (quantity: Int) {
+                super.init(quantity: quantity)
                 isRaw = false
                 isPoisonous = false
                 hungerValue = 0

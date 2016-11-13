@@ -1,5 +1,6 @@
 import Vapor
 import Library
+import MongoKitten
 import HTTP
 import Foundation
 
@@ -21,19 +22,19 @@ func buildAreas(){
     cellar.name = "The Dank Cellar"
 
     //Set paths between areas
-    forest.paths.append(spiritTree)
-    forest.paths.append(cave)
-    forest.paths.append(building)
+    forest.paths.insert(spiritTree)
+    forest.paths.insert(cave)
+    forest.paths.insert(building)
 
-    building.paths.append(cellar)
-    building.paths.append(forest)
+    building.paths.insert(cellar)
+    building.paths.insert(forest)
 
-    cellar.paths.append(cellar)
+    cellar.paths.insert(cellar)
 
-    cave.paths.append(riddleRoom)
-    cave.paths.append(forest)
+    cave.paths.insert(riddleRoom)
+    cave.paths.insert(forest)
 
-    riddleRoom.paths.append(cave)
+    riddleRoom.paths.insert(cave)
 
     /*---set enter conditions---*/
     //No Forest Enter Conditions
@@ -106,14 +107,55 @@ func buildAreas(){
 
 }
 
+class SCMGameManager {
+    var database: MongoKitten.Database
+    
+    public init?() {
+        
+        // Create the database
+        do {
+            guard let hostname = drop.config["app", "mongo-db"]?.string else {
+                return nil
+            }
+            
+            let mongoServer = try Server(hostname: hostname)
+            try mongoServer.connect()
+            
+             self.database = mongoServer["dontshoot"]
+        } catch {
+            print("Could not connect to server. Exiting")
+            return nil
+        }
+    }
+    
+    public func createNewGame() {
+        let area = Area()
+        
+        do {
+            try saveArea(area: area)
+        } catch {
+            print("Saving of Area Failed")
+        }
+    }
+    
+    func saveArea(area: Area) throws {
+        let areaCollection = database["area"]
+        try areaCollection.insert(area.databaseEntry)
+    }
+    
+    func retrieveArea(withId objectId: ObjectId) throws -> Area {
+//        let areaCollection = database["area"]
+//        let areaDoc = try areaCollection.findOne(matching: "id" == objectId)
+//        
+//        let adjacentAreas = areaDoc?["paths"].document
+        return Area()
+    }
+}
 
 let drop = Droplet()
 
-drop.get { req in
-    return try drop.view.make("welcome", [
-    	"message": drop.localization[req.lang, "welcome", "title"]
-    ])
-}
+let manager = SCMGameManager()
+manager?.createNewGame()
 
 drop.get("/fbwebhook") { request in
     print("get webhook")
@@ -126,7 +168,7 @@ drop.get("/fbwebhook") { request in
     
     if token == "2318934571" {
         print("send response")
-
+        
         return res
     } else {
         return "Invalid Token"
@@ -134,7 +176,7 @@ drop.get("/fbwebhook") { request in
 }
 
 drop.post("fbwebhook") { request in
-
+    
     guard let data = request.body.bytes else {
         // There was no real data
         print("Data could not be determined")
@@ -142,7 +184,7 @@ drop.post("fbwebhook") { request in
     }
     
     let json = try JSON(bytes: data)
-
+    
     let handler = SCMMessageHandler(drop: drop)
     let message = try handler.handle(json: json)
     
@@ -150,8 +192,9 @@ drop.post("fbwebhook") { request in
     return Response(status: .ok, body: "Things worked out")
 }
 
-
-
+// Do some other stuff
 drop.resource("posts", PostController())
 
+// Run it
 drop.run()
+

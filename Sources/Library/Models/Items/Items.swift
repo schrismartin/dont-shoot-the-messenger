@@ -32,6 +32,17 @@ public class Item: Hashable {
 	public static func ==(lhs: Item, rhs: Item) -> Bool {
 		return lhs.hashValue == rhs.hashValue
 	}
+    
+    public static func new(item: String, quantity: Int) -> Item? {
+        switch item {
+            case "Stick": return Stick(quantity: quantity)
+            case "Map": return Map(quantity: quantity)
+            case "Torch": return Torch(quantity: quantity)
+            case "Lit_Torch": return LitTorch(quantity: quantity)
+            case "Key": return Key(quantity: quantity)
+            default: return nil
+        }
+    }
 
 	public static func new(name: String, quantity: Int) -> Item {
 		switch name {
@@ -58,10 +69,11 @@ public class Item: Hashable {
 			return false
 		}
 	}
-	init(){
+    
+    public init(quantity: Int){
 		name = ""
 		keywords = [:]
-		quantity = 0
+		self.quantity = quantity
 	}
 }
 public protocol Responder{
