@@ -195,20 +195,7 @@ drop.post("fbwebhook") { request in
         
         handler.sendMessage(toUserWithIdentifier: id, withMessage: message)
     })
-    
-<<<<<<< HEAD
-    // temp player and area objects
-    let player = Player()
-    let area = Area()
 
-//    parse(input: message,player: player,area: area)
-
-    let test: [String] = ["this is a TEST file to see if i can use this","And another one"]
-    parse(input: test,player: player,area: area)
-
-    print("Things worked out")
-=======
->>>>>>> feature-mongodb
     return Response(status: .ok, body: "Things worked out")
 }
 
