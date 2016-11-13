@@ -1,9 +1,13 @@
+import MongoKitten
+
 public class Player {
-	public var inventory: [Item]
+    public var id: ObjectId
+	public var inventory: Set<Item>
 	public var health: Int
 	public var hunger: Int
 	public var hydration: Int
 	public var dead: Bool
+    public var currentArea: ObjectId?
 	public static let maxStat = 20
 	
 	/*	too be implimented
@@ -47,20 +51,55 @@ public class Player {
 
 	}
 	//should have startig parameters from the database of progress to construct current inventory
-	public init (inventory: [Item], health: Int, hunger: Int, hydration: Int, dead: Bool){
+
+    init (id: ObjectId = ObjectId(), inventory: Set<Item> = [], health: Int = Player.maxStat, hunger: Int = Player.maxStat, hydration: Int = Player.maxStat, dead: Bool = false){
+        self.id = id
 		self.inventory = inventory
 		self.health = health
 		self.hunger = hunger
 		self.hydration = hydration
 		self.dead = dead
 	}
-	public init (){
-		inventory = []
-		health = Player.maxStat
-		hunger = Player.maxStat
-		hydration = Player.maxStat
-		dead = false
-	}
+}
+
+// Add a document calculated property for easy database storage
+public extension Player {
+    
+    public convenience init?(document: Document) {
+        self.init()
+        
+        // Get Id
+        self.id = document["_id"].objectIdValue!
+        
+        // get inventory
+        let inv = document["inventory"].storedValue as! Document
+        let arr = inv.arrayValue
+        self.inventory = Set( arr.map { Item.new(fromValue: $0)! } )
+        
+        // Get rest
+        self.health = document["health"].int
+        self.hunger = document["hunger"].int
+        self.hydration = document["hydration"].int
+        self.dead = document["dead"].bool
+        self.currentArea = document["currentArea"].objectIdValue
+    }
+    
+    public var document: Document {
+        
+        let inv = Document(array: self.inventory.map { $0.value })
+        
+        let playerDoc: Document = [
+            "_id" : ~id,
+            "inventory" : ~inv,
+            "health": ~health,
+            "hunger": ~hunger,
+            "hydration": ~hydration,
+            "dead": ~dead,
+            "currentArea": ~(currentArea ?? "nil")
+        ]
+        
+        return playerDoc
+    }
 }
 
 

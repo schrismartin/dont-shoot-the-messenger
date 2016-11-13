@@ -22,19 +22,19 @@ func buildAreas(){
     cellar.name = "The Dank Cellar"
 
     //Set paths between areas
-    forest.paths.insert(spiritTree)
-    forest.paths.insert(cave)
-    forest.paths.insert(building)
+    forest.paths.insert(spiritTree.id)
+    forest.paths.insert(cave.id)
+    forest.paths.insert(building.id)
 
-    building.paths.insert(cellar)
-    building.paths.insert(forest)
+    building.paths.insert(cellar.id)
+    building.paths.insert(forest.id)
 
-    cellar.paths.insert(cellar)
+    cellar.paths.insert(cellar.id)
 
-    cave.paths.insert(riddleRoom)
-    cave.paths.insert(forest)
+    cave.paths.insert(riddleRoom.id)
+    cave.paths.insert(forest.id)
 
-    riddleRoom.paths.insert(cave)
+    riddleRoom.paths.insert(cave.id)
 
     /*---set enter conditions---*/
     //No Forest Enter Conditions
@@ -116,13 +116,13 @@ class SCMGameManager {
         // Create the database
         do {
             guard let hostname = drop.config["app", "mongo-db"]?.string else {
+                print("No Hostname Provided")
                 return nil
             }
             
-            let mongoServer = try Server(hostname: hostname)
-            try mongoServer.connect()
+            let mongoServer = try Server(mongoURL: hostname, automatically: true)
             
-             self.database = mongoServer["dontshoot"]
+             self.database = mongoServer["dont-shoot-the-messenger"]
         } catch {
             print("Could not connect to server. Exiting")
             return nil
@@ -139,24 +139,26 @@ class SCMGameManager {
         }
     }
     
-    func saveArea(area: Area) throws {
+    public func saveArea(area: Area) throws {
         let areaCollection = database["area"]
-        try areaCollection.insert(area.databaseEntry)
+        try areaCollection.insert(area.document)
     }
     
-    func retrieveArea(withId objectId: ObjectId) throws -> Area {
-//        let areaCollection = database["area"]
-//        let areaDoc = try areaCollection.findOne(matching: "id" == objectId)
-//        
-//        let adjacentAreas = areaDoc?["paths"].document
-        return Area()
+    public func retrieveArea(withId objectId: ObjectId) throws -> Area? {
+        let areaCollection = database["area"]
+        let areaDoc = try areaCollection.findOne(matching: "_id" == objectId)
+        
+        if let document = areaDoc {
+            return Area(document: document)
+        } else {
+            return nil
+        }
     }
 }
 
 let drop = Droplet()
 
 let manager = SCMGameManager()
-manager?.createNewGame()
 
 drop.get("/fbwebhook") { request in
     print("get webhook")
@@ -186,9 +188,15 @@ drop.post("fbwebhook") { request in
     
     let json = try JSON(bytes: data)
     
-    let handler = SCMMessageHandler(drop: drop)
-    let message = try handler.handle(json: json)
+    let handler = SCMMessageHandler(app: drop)
+    try handler.handle(json: json, callback: { (message, id) in
+        print("Message Handled Successfully:", message, id)
+        
+        
+        handler.sendMessage(toUserWithIdentifier: id, withMessage: message)
+    })
     
+<<<<<<< HEAD
     // temp player and area objects
     let player = Player()
     let area = Area()
@@ -199,6 +207,8 @@ drop.post("fbwebhook") { request in
     parse(input: test,player: player,area: area)
 
     print("Things worked out")
+=======
+>>>>>>> feature-mongodb
     return Response(status: .ok, body: "Things worked out")
 }
 
