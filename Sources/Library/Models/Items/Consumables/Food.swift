@@ -108,7 +108,10 @@ public class RawFish: Food {
                 hungerValue = -3
                 thirstValue = -5
                 name = "Raw Fish"
+<<<<<<< HEAD
                 keywords ["Campfire"] = "Cooked_Fish"
+=======
+>>>>>>> develop
         }
 }
 public class DirtyWater: Food {
@@ -131,7 +134,11 @@ public class Fish: Food {
                 isRaw = false
                 hungerValue = 3
                 thirstValue = 0
+<<<<<<< HEAD
                 name = "Cooked_Fish"
+=======
+                name = "Cooked Fish"
+>>>>>>> develop
         }
 }
 public class BoiledWater: Food {
@@ -141,7 +148,11 @@ public class BoiledWater: Food {
                 isPoisonous = false
                 hungerValue = 0
                 thirstValue = 5
+<<<<<<< HEAD
                 name = "Boiled_Water"
+=======
+                name = "Boiled Water"
+>>>>>>> develop
         }
 }
 

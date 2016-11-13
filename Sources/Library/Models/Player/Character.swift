@@ -6,8 +6,6 @@ public class Player {
 	public var dead: Bool
 	public static let maxStat = 20
 	
-	//public var areaID: String
-	
 	/*	too be implimented
 	public var awareness: Int
 	public var sanity: Int
@@ -49,6 +47,7 @@ public class Player {
 
 	}
 	//should have startig parameters from the database of progress to construct current inventory
+<<<<<<< HEAD
 	init (inventory: [Item], health: Int, hunger: Int, hydration: Int, dead: Bool){
 		self.inventory = inventory
 		self.health = health
@@ -62,6 +61,24 @@ public class Player {
 		hunger = Player.maxStat
 		hydration = Player.maxStat
 		dead = false
+=======
+	init (i: Int) {
+		//New game
+		if (i == 0){
+			inventory = [:]
+			health = Player.maxStat
+			hunger = Player.maxStat
+			hydration = Player.maxStat
+			dead = false
+		} else {
+			//change later this is for compiling purposes
+			inventory = [:]
+			health = Player.maxStat
+			hunger = Player.maxStat
+			hydration = Player.maxStat
+			dead = false
+		}
+>>>>>>> develop
 	}
 }
 

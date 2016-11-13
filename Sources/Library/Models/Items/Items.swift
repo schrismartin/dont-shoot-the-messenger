@@ -58,8 +58,8 @@ public protocol Shelter {
 	func hideUnder()
 }
 
+//OTHER ITEMS?
 
-/*
 //SHELTER ITEMS
 
 public class Stick: Item, Flamable, Breakable {
