@@ -7,15 +7,15 @@ public class Stick: Item {
 		keywords ["Cloth"] = "Torch"
 		keywords ["Flint"] = "Campfire"
 	}
-	public init(x:Int){
+	public init(quantity: Int){
 		super.init()
-		quantity = x;
+		self.quantity = quantity;
 	}
 }
 public class Map: Item {
-	public init (x: Int){
+	public init (quantity: Int){
 		super.init()
-		quantity = x
+		self.quantity = quantity
 	}
 }
 public class Torch: Item {
@@ -25,15 +25,15 @@ public class Torch: Item {
 	}
 }
 public class LitTorch: Item {
-	public init(x :Int){
+	public init(quantity: Int){
 		super.init()
-		quantity = x
+		self.quantity = quantity
 	}
 }
 public class Key: Item {
-	public init(x :Int){
+	public init(quantity: Int){
 		super.init()
-		quantity = x
+		self.quantity = quantity
 	}
 }
 // Vines

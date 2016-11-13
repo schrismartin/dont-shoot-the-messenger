@@ -32,15 +32,15 @@ func buildAreas(){
     //No Forest Enter Conditions
     
     //building
-    building.eConditionI = Key(x:1);
+    building.eConditionI = Key(quantity: 1);
     //cave
-    cave.eConditionI = LitTorch(x:1)
+    cave.eConditionI = LitTorch(quantity: 1)
     //riddleRoom
     riddleRoom.eConditionW = "Answer"
     //cellar
-    cellar.eConditionE = Stick(x:5)
+    cellar.eConditionE = Stick(quantity: 5)
     //spiritTree
-    spiritTree.eConditionI = Map(x:1)
+    spiritTree.eConditionI = Map(quantity: 1)
 
     /*-----Fill Flavor Text------*/
 
