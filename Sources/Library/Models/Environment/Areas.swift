@@ -5,7 +5,13 @@ public class Area {
 	}
 	public var inventory: [Item]
 	public var paths: [Area]
-	public var infoText: String
+	public var enterText: String
+	public var generalText: String
+	
+	public var eConditionI: Item?
+	public var eConditionW: String?
+	public var eConditionE: Item?
+
 	init(){
 		inventory = []
 		paths = []
@@ -14,17 +20,6 @@ public class Area {
 	}
 }
 
-public class Beach: Area{
-	override init(){
-		super.init()
-		let newItem = Fish.init()
-		inventory.append(newItem)
-		paths = []
-		infoText = "You find yourself on a sandy beach. The wood of a broken raft surrounds you." 
-		name = "The Beach"
-	}
-}
-//possible infinite loop? When creating new instances of Area
 public class Forest: Area{
 	override init(){
 		super.init()
