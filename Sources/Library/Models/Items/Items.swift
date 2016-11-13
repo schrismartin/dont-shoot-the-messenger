@@ -56,6 +56,12 @@ public class Item: Hashable {
 				return LitTorch(quantity: quantity)
 			case "Key":
 				return Key(quantity: quantity)
+			case "Journal":
+				return Journal(quantity: quantity)
+			case "Cloth":
+				return Cloth(quantity: quantity)
+			case "Flint":
+				return Flint(quantity: quantity)
 			default :
 				return Item()
 		}
