@@ -5,9 +5,9 @@ public class Area {
 	public var enterText: String
 	public var generalText: String
 	
-	public var eConditionI: Item?
-	public var eConditionW: String?
-	public var eConditionE: Item?
+	public var eConditionI: Item? //compare if player inventory quantity is greater than needed
+	public var eConditionW: String? //compare if equal to
+	public var eConditionE: Item? // compare if current environment quantity is less than needed
 
 	public init(){
 		inventory = []

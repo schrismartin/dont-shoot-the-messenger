@@ -27,19 +27,36 @@ func buildAreas(){
 
     riddleRoom.paths.append(cave)
 
-    //set enter conditions 
+    /*---set enter conditions---*/
     
     //No Forest Enter Conditions
     
     //building
     building.eConditionI = Key(x:1);
     //cave
+    cave.eConditionI = LitTorch(x:1)
+    //riddleRoom
+    riddleRoom.eConditionW = "Answer"
+    //cellar
+    cellar.eConditionE = Stick(x:5)
+    //spiritTree
+    spiritTree.eConditionI = Map(x:1)
 
+    /*-----Fill Flavor Text------*/
+
+    //No Forest Enter Conditions
+    
+    //building
+ 
+    //cave
+    
     //riddleRoom
 
     //cellar
-
+   
     //spiritTree
+
+    /*--------------------------------*/
 
 
 
