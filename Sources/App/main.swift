@@ -73,53 +73,6 @@ drop.get("/fbwebhook") { request in
     }
 }
 
-let PAGE_ACCESS_TOKEN = "EAATAd74WSvYBAFpstWfFB1fp3OJbqhL2lb1MddvxqxoduD23YqgdA1C5VXNKBBFR8qHTIMFcTEkzAqC5bZCLKZBPolvOitVxvqsxX3cHSE0KTF8Mq6URz8i3OdTivk2iQQikk99GTrIir1zvvXasyd9ZA6Y4rMhEPya61TO7QZDZD"
-
-func sendMessage(to user: String, withMessage message: String) {
-    do {
-        let messageData = JSON([
-            "recipient" : [
-                "id": Node(user)
-                ],
-             "message" : [
-                "text" : Node(message)
-                ]
-            ])
-        
-        let url = "https://graph.facebook.com/v2.8/me/messages?access_token=" + PAGE_ACCESS_TOKEN
-        let response = try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: messageData.makeBody())
-        
-        print(try Data(response.body.bytes!).string())
-    
-    } catch {
-        print("Unable to post")
-        return
-    }
-}
-
-func received(event: JSON) -> String? {
-    // Extract Components
-    guard let senderId = event["sender"]?["id"]?.string,
-        let recipientId = event["recipient"]?["id"]?.string,
-        let messageTime = event["timestamp"]?.int,
-        let message = event["message"] else {
-            return nil
-    }
-    
-    print("Received message for user \(senderId) and page \(recipientId) at \(messageTime) for message:")
-    
-    
-    if let messageId = message["mid"]?.string,
-        let text = message["text"]?.string {
-        print(messageId, text)
-        
-        sendMessage(to: senderId, withMessage: text)
-        return text
-    } else {
-        return nil
-    }
-}
-
 drop.post("fbwebhook") { request in
 
     guard let data = request.body.bytes else {
@@ -130,33 +83,8 @@ drop.post("fbwebhook") { request in
     
     let json = try JSON(bytes: data)
 
-    if let type = json["object"]?.string, type == "page" {
-        
-        // Iterate over the entries, they may be batched
-        guard let entries = json["entry"]?.array as? [JSON] else {
-            print("Entries could not be decoded")
-            return Response(status: .badRequest, body: "Entries could not be decoded")
-        }
-        
-        for entry in entries {
-            guard let pageId = entry["id"]?.string,
-                let timeOfEvent = entry["time"]?.int,
-                let messaging = entry["messaging"]?.array as? [JSON] else {
-                    print("Entry could not successfully be parsed")
-                    return Response(status: .badRequest, body: "Entry could not successfully be parsed")
-            }
-            
-            for event in messaging {
-                if let message = event["message"] {
-                    let text = received(event: event)
-                    return Response(status: .ok, body: "Webhook Received Text: \(text)")
-                } else {
-                    print("Webhook Received Unknown Event: \(event)")
-                    return Response(status: .ok, body: "Webhook Received Unknown Event: \(event)")
-                }
-            }
-        }
-    }
+    let handler = SCMMessageHandler(drop: drop)
+    let message = try handler.handle(json: json)
     
     print("Things worked out")
     return Response(status: .ok, body: "Things worked out")
