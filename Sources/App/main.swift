@@ -115,13 +115,13 @@ class SCMGameManager {
         // Create the database
         do {
             guard let hostname = drop.config["app", "mongo-db"]?.string else {
+                print("No Hostname Provided")
                 return nil
             }
             
-            let mongoServer = try Server(hostname: hostname)
-            try mongoServer.connect()
+            let mongoServer = try Server(mongoURL: hostname, automatically: true)
             
-             self.database = mongoServer["dontshoot"]
+             self.database = mongoServer["dont-shoot-the-messenger"]
         } catch {
             print("Could not connect to server. Exiting")
             return nil
@@ -188,7 +188,7 @@ drop.post("fbwebhook") { request in
     let handler = SCMMessageHandler(drop: drop)
     let message = try handler.handle(json: json)
     
-    print("Things worked out")
+    print("Things worked out: \(message)")
     return Response(status: .ok, body: "Things worked out")
 }
 

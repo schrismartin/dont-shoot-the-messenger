@@ -44,7 +44,7 @@ public extension Area {
         let paths = Document(array: self.paths.map { Value(stringLiteral: $0.id.hexString) })
         
         let areaDoc: Document = [
-            "id" : ~id,
+            "_id" : ~id,
             "name" : ~name,
             "inventory" : ~inv,
             "paths" : ~paths,
