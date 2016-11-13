@@ -1,13 +1,13 @@
 import MongoKitten
 
 public class Player {
-    public var id: ObjectId
+    public var id: SCMIdentifier
 	public var inventory: Set<Item>
 	public var health: Int
 	public var hunger: Int
 	public var hydration: Int
 	public var dead: Bool
-    public var currentArea: ObjectId?
+    public var currentArea: ObjectId
 	public static let maxStat = 20
 	
 	/*	too be implimented
@@ -16,7 +16,7 @@ public class Player {
 	public var sleep: Int
 	*/
 	//called every time health is changed
-	func checkHealth (){
+	public func checkHealth (){
 		if (health <= 0){
 			dead = true;
 		}
@@ -28,11 +28,11 @@ public class Player {
 		}
 	}
 	//called when food is eaten
-	func applyEat(hydro: Int, hung: Int){
+	public func applyEat(hydro: Int, hung: Int){
 		hydration = (hydration + hydro) % Player.maxStat
 		hunger = (hunger + hung) % Player.maxStat
 	}
-	func eat (yummy: Food){
+	public func eat (yummy: Food){
 		if (hydration == Player.maxStat && hunger == Player.maxStat){
 			//tell them they're full
 			return
@@ -46,19 +46,20 @@ public class Player {
 
 	}
 	//adjust players stats based on his current stats. Called once per day at dawn
-	func checkUp (){
+	public func checkUp (){
 
 
 	}
 	//should have startig parameters from the database of progress to construct current inventory
 
-    init (id: ObjectId = ObjectId(), inventory: Set<Item> = [], health: Int = Player.maxStat, hunger: Int = Player.maxStat, hydration: Int = Player.maxStat, dead: Bool = false){
+    public init (id: SCMIdentifier, inventory: Set<Item> = [], health: Int = Player.maxStat, hunger: Int = Player.maxStat, hydration: Int = Player.maxStat, dead: Bool = false){
         self.id = id
 		self.inventory = inventory
 		self.health = health
 		self.hunger = hunger
 		self.hydration = hydration
 		self.dead = dead
+        self.currentArea = ObjectId()
 	}
 }
 
@@ -66,10 +67,11 @@ public class Player {
 public extension Player {
     
     public convenience init?(document: Document) {
-        self.init()
+        // Grab id
+        let id = SCMIdentifier(string: document["facebookId"].string)
         
-        // Get Id
-        self.id = document["_id"].objectIdValue!
+        // Initialize using ID
+        self.init(id: id)
         
         // get inventory
         let inv = document["inventory"].storedValue as! Document
@@ -81,7 +83,7 @@ public extension Player {
         self.hunger = document["hunger"].int
         self.hydration = document["hydration"].int
         self.dead = document["dead"].bool
-        self.currentArea = document["currentArea"].objectIdValue
+        self.currentArea = document["currentArea"].objectIdValue!
     }
     
     public var document: Document {
@@ -89,18 +91,18 @@ public extension Player {
         let inv = Document(array: self.inventory.map { $0.value })
         
         let playerDoc: Document = [
-            "_id" : ~id,
+            "_id" : ~id.objectId,
+            "facebookId": ~id.string,
             "inventory" : ~inv,
             "health": ~health,
             "hunger": ~hunger,
             "hydration": ~hydration,
             "dead": ~dead,
-            "currentArea": ~(currentArea ?? "nil")
+            "currentArea": ~currentArea
         ]
         
         return playerDoc
     }
 }
-
 
 

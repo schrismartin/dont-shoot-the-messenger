@@ -23,7 +23,7 @@ public class SCMMessageHandler {
         case entryParseError
     }
     
-    public func handle(json: JSON, callback: @escaping (String, SCMIdentifier) -> Void) throws {
+    public func handle(json: JSON, callback: @escaping (String, SCMIdentifier) throws -> Void) throws {
         
         if let type = json["object"]?.string, type == "page" {
             
@@ -43,8 +43,8 @@ public class SCMMessageHandler {
                 
                 for event in messaging {
                     if event["message"] != nil {
-                        received(event: event, callback: { (message, id) in
-                            callback(message, id)
+                        try received(event: event, callback: { (message, id) in
+                            try callback(message, id)
                         })
                     } else {
                         print("Webhook Received Unknown Event: \(event)")
@@ -54,7 +54,7 @@ public class SCMMessageHandler {
         }
     }
     
-    public func received(event: JSON, callback: (String, SCMIdentifier) -> Void) {
+    public func received(event: JSON, callback: (String, SCMIdentifier) throws -> Void) throws {
         // Extract Components
         guard let senderId = event["sender"]?["id"]?.string,
 //            let recipientId = event["recipient"]?["id"]?.string,
@@ -69,7 +69,7 @@ public class SCMMessageHandler {
             
             let id = SCMIdentifier(string: senderId)
             
-            callback(text, id)
+            try callback(text, id)
             
         } else {
             return

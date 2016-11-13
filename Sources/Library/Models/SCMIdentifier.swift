@@ -13,11 +13,8 @@ import HTTP
 
 public struct SCMIdentifier {
     public var string: String
-    public var objectId: ObjectId? {
+    public var objectId: ObjectId {
         let str = string.substring(to: string.index(string.startIndex, offsetBy: 12)).toBytes()
-        do {
-            let objId = try ObjectId.init(bytes: str)
-            return objId
-        } catch { return nil }
+        return try! ObjectId.init(bytes: str)
     }
 }

@@ -4,7 +4,7 @@ import MongoKitten
 import HTTP
 import Foundation
 
-func buildAreas(){
+func buildAreas(using manager: SCMGameManager) -> Area? {
     //Create all area objects
     let forest = Area()
     let cave = Area()
@@ -105,60 +105,22 @@ func buildAreas(){
     //cellar
     cellar.inventory.insert(Item.new(item: "journal", quantity: 1)!)
     //spiritTree
-
-}
-
-class SCMGameManager {
-    var database: MongoKitten.Database
     
-    public init?() {
-        
-        // Create the database
-        do {
-            guard let hostname = drop.config["app", "mongo-db"]?.string else {
-                print("No Hostname Provided")
-                return nil
-            }
-            
-            let mongoServer = try Server(mongoURL: hostname, automatically: true)
-            
-             self.database = mongoServer["dont-shoot-the-messenger"]
-        } catch {
-            print("Could not connect to server. Exiting")
-            return nil
-        }
-    }
-    
-    public func createNewGame() {
-        let area = Area()
-        
-        do {
-            try saveArea(area: area)
-        } catch {
-            print("Saving of Area Failed")
-        }
-    }
-    
-    public func saveArea(area: Area) throws {
-        let areaCollection = database["area"]
-        try areaCollection.insert(area.document)
-    }
-    
-    public func retrieveArea(withId objectId: ObjectId) throws -> Area? {
-        let areaCollection = database["area"]
-        let areaDoc = try areaCollection.findOne(matching: "_id" == objectId)
-        
-        if let document = areaDoc {
-            return Area(document: document)
-        } else {
-            return nil
-        }
+    // Save Areas
+    do {
+        try manager.saveArea(area: forest)
+        try manager.saveArea(area: building)
+        try manager.saveArea(area: riddleRoom)
+        try manager.saveArea(area: cave)
+        try manager.saveArea(area: cellar)
+        try manager.saveArea(area: spiritTree)
+        return forest
+    } catch {
+        return nil
     }
 }
 
 let drop = Droplet()
-
-let manager = SCMGameManager()
 
 drop.get("/fbwebhook") { request in
     print("get webhook")
@@ -192,8 +154,37 @@ drop.post("fbwebhook") { request in
     try handler.handle(json: json, callback: { (message, id) in
         print("Message Handled Successfully:", message, id)
         
+        // Construct Endpoint
+        guard let manager = SCMGameManager() else { return }
+        guard let player = try manager.retrievePlayer(withId: id) else {
+            
+            // Create a new game
+            let player = Player(id: id)
+            
+            // Create initial location
+            guard let initialLocation = buildAreas(using: manager) else { return }
+            
+            player.currentArea = initialLocation.id
+            
+            let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
+            
+            handler.sendMessage(toUserWithIdentifier: player.id, withMessage: introductoryText)
+            
+            try manager.savePlayer(player: player)
+            
+            return
+        }
         
-        handler.sendMessage(toUserWithIdentifier: id, withMessage: message)
+        guard let currentArea = try manager.retrieveArea(withId: player.currentArea) else { return }
+        // Parse User Message
+        
+        // Perform Changes based on user message
+        
+        // Save state to db
+        
+        // Provide response through messenger
+        
+        handler.sendMessage(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
     })
 
     return Response(status: .ok, body: "Things worked out")

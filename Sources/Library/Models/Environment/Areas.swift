@@ -44,7 +44,7 @@ public extension Area {
         // get paths
         let paths = document["paths"].storedValue as! Document
         let values = paths.arrayValue
-        self.paths = Set( values.map { $0.objectIdValue! } )
+        self.paths = Set( values.map { try! ObjectId($0.string) } )
         
         self.enterText = document["enterText"].string
         self.lookText = document["lookText"].string

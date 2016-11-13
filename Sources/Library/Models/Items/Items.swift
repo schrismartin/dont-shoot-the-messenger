@@ -41,7 +41,7 @@ public class Item: Hashable {
             case "stick": return Stick(quantity: quantity)
             case "map": return Map(quantity: quantity)
             case "torch": return Torch(quantity: quantity)
-            case "lit_Torch": return LitTorch(quantity: quantity)
+            case "lit_torch": return LitTorch(quantity: quantity)
             case "key": return Key(quantity: quantity)
             case "journal": return Journal(quantity: quantity)
             case "cloth": return Cloth(quantity: quantity)
