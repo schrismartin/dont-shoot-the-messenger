@@ -1,21 +1,23 @@
-// Cloth
-// Flint
-// Rock
-public class Stick: Item {
-	public override init(){
+public class Cloth: Item {
+	public init(quantity: Int){
 		super.init()
-		keywords ["Cloth"] = "Torch"
-		keywords ["Flint"] = "Campfire"
+		self.quantity = quantity
+		keywords ["Stick"] = "Torch"
 	}
+}
+public class Flint: Item {
+	public init(quantity: Int){
+		super.init()
+		self.quantity = quantity
+		keywords ["Torch"] = "Lit_Torch"
+	}
+}
+public class Stick: Item {
 	public init(quantity: Int){
 		super.init()
 		self.quantity = quantity;
-	}
-}
-public class Map: Item {
-	public init (quantity: Int){
-		super.init()
-		self.quantity = quantity
+		keywords ["Cloth"] = "Torch"
+//		keywords ["Flint"] = "Campfire"
 	}
 }
 public class Torch: Item {
@@ -30,6 +32,21 @@ public class LitTorch: Item {
 		self.quantity = quantity
 	}
 }
+
+
+/*-------------------------------------*/
+public class Journal: Item {
+	public init(quantity: Int){
+		super.init()
+		self.quantity = quantity
+	}
+}
+public class Map: Item {
+	public init (quantity: Int){
+		super.init()
+		self.quantity = quantity
+	}
+}
 public class Key: Item {
 	public init(quantity: Int){
 		super.init()
@@ -37,3 +54,4 @@ public class Key: Item {
 	}
 }
 // Vines
+// Rock
