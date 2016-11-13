@@ -9,4 +9,10 @@ public class Stick: Item {
 		keywords ["Flint"] = "Campfire"
 	}
 }
+public class Key: Item {
+	public init(x :Int){
+		super.init()
+		quantity = 1
+	}
+}
 // Vines

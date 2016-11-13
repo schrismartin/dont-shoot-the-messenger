@@ -3,6 +3,50 @@ import Library
 import HTTP
 import Foundation
 
+func buildAreas(){
+    //Create all area objects
+    let forest = Area()
+    let cave = Area()
+    let riddleRoom = Area()
+    let spiritTree = Area()
+    let building = Area()
+    let cellar = Area()
+    
+    //Set paths between areas
+    forest.paths.append(spiritTree)
+    forest.paths.append(cave)
+    forest.paths.append(building)
+
+    building.paths.append(cellar)
+    building.paths.append(forest)
+
+    cellar.paths.append(cellar)
+
+    cave.paths.append(riddleRoom)
+    cave.paths.append(forest)
+
+    riddleRoom.paths.append(cave)
+
+    //set enter conditions 
+    
+    //No Forest Enter Conditions
+    
+    //building
+    building.eConditionI = Key(x:1);
+    //cave
+
+    //riddleRoom
+
+    //cellar
+
+    //spiritTree
+
+
+
+
+}
+
+
 let drop = Droplet()
 
 drop.get { req in
@@ -14,11 +58,9 @@ drop.get { req in
 drop.get("/fbwebhook") { request in
     print("get webhook")
     guard let token = request.data["hub.verify_token"]?.string else {
-        return "BAD REQUEST"
         throw Abort.badRequest
     }
     guard let res = request.data["hub.challenge"]?.string else {
-        return "BAD REQUEST"
         throw Abort.badRequest
     }
     

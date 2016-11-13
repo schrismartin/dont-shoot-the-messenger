@@ -61,7 +61,7 @@ public protocol Shelter {
 //OTHER ITEMS?
 
 //SHELTER ITEMS
-
+/*
 public class Stick: Item, Flamable, Breakable {
 	func light() {
 		// Do this when we light the stick
