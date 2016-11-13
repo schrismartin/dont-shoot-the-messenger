@@ -62,6 +62,12 @@ public class Item: Hashable {
 		keywords = [:]
 		self.quantity = quantity
 	}
+    
+    public static let manifest = ["Stick",
+    "Map",
+    "Torch",
+    "Lit_Torch",
+    "Key"]
 }
 
 public extension Item {

@@ -187,10 +187,14 @@ drop.post("fbwebhook") { request in
     
     let json = try JSON(bytes: data)
     
-    let handler = SCMMessageHandler(drop: drop)
-    let message = try handler.handle(json: json)
+    let handler = SCMMessageHandler(app: drop)
+    try handler.handle(json: json, callback: { (message, id) in
+        print("Message Handled Successfully:", message, id)
+        
+        
+        handler.sendMessage(toUserWithIdentifier: id, withMessage: message)
+    })
     
-    print("Things worked out: \(message)")
     return Response(status: .ok, body: "Things worked out")
 }
 

@@ -14,14 +14,9 @@ public class Area {
 	public var eConditionE: Item? // compare if current environment quantity is less than needed
 
 	public init(){
-        let items = ["Stick",
-                     "Map",
-                     "Torch",
-                     "Lit_Torch",
-                     "Key"]
         
         id = ObjectId()
-        let temp = items.map { Item.new(item: $0, quantity: 0)! }
+        let temp = Item.manifest.map { Item.new(item: $0, quantity: 0)! }
         inventory = Set(temp)
 		paths = []
 		enterText = ""
@@ -38,21 +33,19 @@ public extension Area {
     public convenience init?(document: Document) {
         self.init()
         
+        // Get identifiers
         self.id = document["_id"].objectIdValue!
         self.name = document["name"].string
         
         // get inventory
         let inv = document["inventory"].storedValue as! Document
         let arr = inv.arrayValue
-
-//        self.inventory = Set(invArr)
+        self.inventory = Set( arr.map { Item.new(fromValue: $0)! } )
         
         // get paths
         let paths = document["paths"].storedValue as! Document
         let values = paths.arrayValue
-        do {
-            self.paths = Set( values.map { $0.objectIdValue! } )
-        } catch { return nil }
+        self.paths = Set( values.map { $0.objectIdValue! } )
         
         self.enterText = document["enterText"].string
         self.lookText = document["lookText"].string
