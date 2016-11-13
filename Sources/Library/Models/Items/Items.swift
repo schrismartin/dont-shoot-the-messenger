@@ -60,16 +60,6 @@ public protocol Shelter {
 
 //OTHER ITEMS?
 
-
-
-
-
-
-
-/*
-
-
-
 //SHELTER ITEMS
 
 public class Stick: Item, Flamable, Breakable {

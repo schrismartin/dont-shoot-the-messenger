@@ -1,10 +1,11 @@
 public class Player {
-	public var inventory: [String: Int] //dictionary keyed on Item names with value equaling current quantity of the Item
+	public var inventory: [Item]
 	public var health: Int
 	public var hunger: Int
 	public var hydration: Int
 	public var dead: Bool
 	public static let maxStat = 20
+	
 	/*	too be implimented
 	public var awareness: Int
 	public var sanity: Int
@@ -46,6 +47,21 @@ public class Player {
 
 	}
 	//should have startig parameters from the database of progress to construct current inventory
+<<<<<<< HEAD
+	init (inventory: [Item], health: Int, hunger: Int, hydration: Int, dead: Bool){
+		self.inventory = inventory
+		self.health = health
+		self.hunger = hunger
+		self.hydration = hydration
+		self.dead = dead
+	}
+	init (){
+		inventory = []
+		health = Player.maxStat
+		hunger = Player.maxStat
+		hydration = Player.maxStat
+		dead = false
+=======
 	init (i: Int) {
 		//New game
 		if (i == 0){
@@ -62,6 +78,7 @@ public class Player {
 			hydration = Player.maxStat
 			dead = false
 		}
+>>>>>>> develop
 	}
 }
 
