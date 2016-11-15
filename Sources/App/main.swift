@@ -150,8 +150,14 @@ drop.post("fbwebhook") { request in
     
     let json = try JSON(bytes: data)
     
+    
+    
     let handler = SCMMessageHandler(app: drop)
-    try handler.handle(json: json, callback: { (message, id) in
+    handler.handleAsync(json: json, callback: { (payload) in
+        
+        let message = payload.message
+        let id = payload.senderId
+        
         print("Message Handled Successfully:", message, id)
         
         // Construct Endpoint
@@ -168,8 +174,7 @@ drop.post("fbwebhook") { request in
             
             let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
             
-            handler.sendMessage(toUserWithIdentifier: player.id, withMessage: introductoryText)
-            
+            handler.sendMessageAsync(toUserWithIdentifier: player.id, withMessage: introductoryText)
             try manager.savePlayer(player: player)
             
             return
@@ -184,10 +189,11 @@ drop.post("fbwebhook") { request in
         
         // Provide response through messenger
         
-        handler.sendMessage(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
+        handler.sendMessageAsync(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
     })
 
-    return Response(status: .ok, body: "Things worked out")
+    print("Request returning successfully")
+    return Response(status: .ok)
 }
 
 // Do some other stuff

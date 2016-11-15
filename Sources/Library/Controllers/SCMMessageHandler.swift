@@ -14,6 +14,7 @@ import MongoKitten
 public class SCMMessageHandler {
     
     var drop: Droplet
+    static let urlBase: String = "https://graph.facebook.com/v2.8/me/messages?access_token="
     
     public init(app: Droplet) {
         self.drop = app
@@ -23,7 +24,16 @@ public class SCMMessageHandler {
         case entryParseError
     }
     
-    public func handle(json: JSON, callback: @escaping (String, SCMIdentifier) throws -> Void) throws {
+    // MARK: Handle Recipient
+    
+    public func handleAsync(json: JSON, callback: @escaping (FBMessagePayload) throws -> Void) {
+        // Run Asyncronously
+        DispatchQueue.global().async {
+            try! self.handle(json: json, callback: callback)
+        }
+    }
+    
+    fileprivate func handle(json: JSON, callback: @escaping (FBMessagePayload) throws -> Void) throws {
         
         if let type = json["object"]?.string, type == "page" {
             
@@ -43,8 +53,11 @@ public class SCMMessageHandler {
                 
                 for event in messaging {
                     if event["message"] != nil {
-                        try received(event: event, callback: { (message, id) in
-                            try callback(message, id)
+                        try received(event: event, callback: { (payload) in
+                            
+                            self.sendTypingAsync(toUserWithIdentifier: payload.senderId)
+                            
+                            try callback(payload)
                         })
                     } else {
                         print("Webhook Received Unknown Event: \(event)")
@@ -54,11 +67,11 @@ public class SCMMessageHandler {
         }
     }
     
-    public func received(event: JSON, callback: (String, SCMIdentifier) throws -> Void) throws {
+    fileprivate func received(event: JSON, callback: (FBMessagePayload) throws -> Void) throws {
         // Extract Components
         guard let senderId = event["sender"]?["id"]?.string,
-//            let recipientId = event["recipient"]?["id"]?.string,
-//            let messageTime = event["timestamp"]?.int,
+            let recipientId = event["recipient"]?["id"]?.string,
+            let messageTime = event["timestamp"]?.int,
             let message = event["message"] else {
                 return
         }
@@ -67,16 +80,27 @@ public class SCMMessageHandler {
         if let _ = message["mid"]?.string,
             let text = message["text"]?.string {
             
-            let id = SCMIdentifier(string: senderId)
+            let returnedSenderId = SCMIdentifier(string: senderId)
+            let returnedRecipientId = SCMIdentifier(string: recipientId)
+            let returnedTime = Date(timeIntervalSince1970: TimeInterval(messageTime))
+            let payload = FBMessagePayload(senderId: returnedSenderId, recipientId: returnedRecipientId, date: returnedTime, message: text)
             
-            try callback(text, id)
+            try callback(payload)
             
         } else {
             return
         }
     }
     
-    public func sendMessage(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) {
+    // MARK: Send Message
+    
+    public func sendMessageAsync(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) {
+        DispatchQueue.global().async {
+            self.sendMessage(toUserWithIdentifier: identifier, withMessage: message)
+        }
+    }
+    
+    fileprivate func sendMessage(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) {
         do {
             let messageData = JSON([
                 "recipient" : [
@@ -90,10 +114,37 @@ public class SCMMessageHandler {
             let access_token = drop.config["app", "access-token"]!.string!
             let url = "https://graph.facebook.com/v2.8/me/messages?access_token=" + access_token
             let response = try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: messageData.makeBody())
+            print(try? response.body.bytes!.toString() ?? "nil")
             
         } catch {
             print("Unable to post")
-            return
+        }
+    }
+    
+    // MARK: Show Typing
+    
+    public func sendTypingAsync(toUserWithIdentifier identifier: SCMIdentifier) {
+        DispatchQueue.global().async {
+            self.sendTyping(toUserWithIdentifier: identifier)
+        }
+    }
+    
+    fileprivate func sendTyping(toUserWithIdentifier identifier: SCMIdentifier) {
+        do {
+            let messageData = JSON([
+                "recipient" : [
+                    "id": Node(identifier.string)
+                ],
+                "sender_action" : "typing_on"
+                ])
+            
+            let access_token = drop.config["app", "access-token"]!.string!
+            let url = SCMMessageHandler.urlBase + access_token
+            let response = try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: messageData.makeBody())
+            print(try? response.body.bytes!.toString() ?? "nil")
+            
+        } catch {
+            print("Unable to post")
         }
     }
 }
