@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Dispatch
 import Vapor
 import HTTP
 import MongoKitten
