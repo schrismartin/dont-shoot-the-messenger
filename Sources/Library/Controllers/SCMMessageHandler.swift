@@ -30,11 +30,17 @@ public class SCMMessageHandler {
     public func handleAsync(json: JSON, callback: @escaping (FBMessagePayload) throws -> Void) {
         // Run Asyncronously
         DispatchQueue.global().async {
-            try! self.handle(json: json, callback: callback)
+            do { try self.handle(json: json, callback: callback) } catch {
+                print("Unable to handle request")
+            }
         }
     }
     
     fileprivate func handle(json: JSON, callback: @escaping (FBMessagePayload) throws -> Void) throws {
+        
+        // Print JSON output
+        let output = try! Data(json.makeBody().bytes!).toString()
+        print(output)
         
         if let type = json["object"]?.string, type == "page" {
             
