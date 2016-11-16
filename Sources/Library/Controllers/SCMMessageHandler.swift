@@ -118,13 +118,15 @@ public class SCMMessageHandler {
                 ]
                 ])
             
-            let access_token = drop.config["app", "access-token"]!.string!
+            let access_token = "EAATAd74WSvYBAFpstWfFB1fp3OJbqhL2lb1MddvxqxoduD23YqgdA1C5VXNKBBFR8qHTIMFcTEkzAqC5bZCLKZBPolvOitVxvqsxX3cHSE0KTF8Mq6URz8i3OdTivk2iQQikk99GTrIir1zvvXasyd9ZA6Y4rMhEPya61TO7QZDZD"
             let url = "https://graph.facebook.com/v2.8/me/messages?access_token=" + access_token
             let response = try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: messageData.makeBody())
+            
             print(try? response.body.bytes!.toString() ?? "nil")
             
         } catch {
             print("Unable to post")
+            return
         }
     }
     
