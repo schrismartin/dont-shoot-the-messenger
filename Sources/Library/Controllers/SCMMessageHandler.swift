@@ -14,8 +14,11 @@ import MongoKitten
 
 public class SCMMessageHandler {
     
-    var drop: Droplet
+    // Constants
     static let urlBase: String = "https://graph.facebook.com/v2.8/me/messages?access_token="
+    
+    // Properties
+    var drop: Droplet
     
     public init(app: Droplet) {
         self.drop = app
@@ -23,214 +26,175 @@ public class SCMMessageHandler {
     
     enum HandlerErrors: Error {
         case entryParseError
+        case unexpectedEventFormat
     }
+}
+
+// MARK: Handle Recipt
+extension SCMMessageHandler {
     
-    // MARK: Handle Recipient
-    
-    public func handleAsync(json: JSON, callback: @escaping (FBMessagePayload) throws -> Void) {
+    /// Handle an incoming Messenger JSON Payload and delegate the handling of resulting events asyncronously.
+    /// - Parameter json: JSON payload containing all data returned by a Facebook message
+    /// - Parameter callback: Closure containing all game logic.
+    public func handleAsync(json: JSON, callback: @escaping (FBMessageEvent) throws -> Void) {
         // Run Asyncronously
         DispatchQueue.global().async {
             do { try self.handle(json: json, callback: callback) } catch {
-                print("Unable to handle request")
+                fatalError("Must be implemented")
             }
         }
     }
     
-    fileprivate func handle(json: JSON, callback: @escaping (FBMessagePayload) throws -> Void) throws {
+    /// Handle an incoming Messenger JSON Payload and delegate the handling of resulting events.
+    /// - Parameter json: JSON payload containing all data returned by a Facebook message
+    /// - Parameter callback: Closure containing all game logic.
+    fileprivate func handle(json: JSON, callback: @escaping (FBMessageEvent) throws -> Void) throws {
         
         // Print JSON output
         let output = try! Data(json.makeBody().bytes!).toString()
         print(output)
         
-        if let type = json["object"]?.string, type == "page" {
-            
-            // Iterate over the entries, they may be batched
-            guard let entries = json["entry"]?.array as? [JSON] else {
-                print("Entries could not be decoded")
-                throw HandlerErrors.entryParseError
-            }
-            
-            for entry in entries {
-                guard let _ = entry["id"]?.string,
-                    let _ = entry["time"]?.int,
-                    let messaging = entry["messaging"]?.array as? [JSON] else {
-                        print("Entry could not successfully be parsed")
-                        throw HandlerErrors.entryParseError
-                }
-                
-                for event in messaging {
-                    if event["message"] != nil {
-                        try received(event: event, callback: { (payload) in
-                            
-                            self.sendTypingAsync(toUserWithIdentifier: payload.senderId)
-                            
-                            try callback(payload)
-                        })
-                    } else {
-                        print("Webhook Received Unknown Event: \(event)")
-                    }
-                }
-            }
-        }
-    }
-    
-    fileprivate func received(event: JSON, callback: (FBMessagePayload) throws -> Void) throws {
-        // Extract Components
-        guard let senderId = event["sender"]?["id"]?.string,
-            let recipientId = event["recipient"]?["id"]?.string,
-            let messageTime = event["timestamp"]?.int,
-            let message = event["message"] else {
-                return
+        // Extract top-level components
+        guard let type = json["object"]?.string, type == "page",
+            let entries = json["entry"]?.array as? [JSON] else {
+            throw HandlerErrors.unexpectedEventFormat
         }
         
+        // Extract all events in all messaging arrays into one JSON array
+        let events = entries
+            .flatMap { $0["messaging"]?.array as? [JSON] }
+            .flatMap { $0 }
         
-        if let _ = message["mid"]?.string,
-            let text = message["text"]?.string {
+        // Traverse each event and activate callback handler for each
+        for data in events where data["message"] != nil {
             
-            let returnedSenderId = SCMIdentifier(string: senderId)
-            let returnedRecipientId = SCMIdentifier(string: recipientId)
-            let returnedTime = Date(timeIntervalSince1970: TimeInterval(messageTime))
-            let payload = FBMessagePayload(senderId: returnedSenderId, recipientId: returnedRecipientId, date: returnedTime, message: text)
+            // Extract payload
+            let payload = try extractEvent(from: data)
             
+            // User feedback
+            self.sendTypingAsync(toUserWithIdentifier: payload.senderId)
             try callback(payload)
             
-        } else {
-            return
         }
     }
     
-    // MARK: Send Message
+    /// Constructs an expected Facebook Messenger event from the received JSON data
+    /// - Parameter event: The JSON payload representation of an event
+    fileprivate func extractEvent(from payload: JSON) throws -> FBMessageEvent {
+        
+        // Extract Components
+        guard let senderId = payload["sender"]?["id"]?.string,
+            let recipientId = payload["recipient"]?["id"]?.string,
+            let messageTime = payload["timestamp"]?.int,
+            let message = payload["message"],
+            let text = message["text"]?.string else {
+                throw HandlerErrors.unexpectedEventFormat
+        }
+        
+        // Construct Payload
+        let returnedSenderId = SCMIdentifier(string: senderId)
+        let returnedRecipientId = SCMIdentifier(string: recipientId)
+        let returnedTime = Date(timeIntervalSince1970: TimeInterval(messageTime))
+        let payload = FBMessageEvent(senderId: returnedSenderId,
+                                       recipientId: returnedRecipientId,
+                                       date: returnedTime,
+                                       message: text)
+        
+        return payload
+    }
+}
+
+// MARK: Send Messages
+extension SCMMessageHandler {
     
-    public func sendMessageAsync(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) {
+    /// Closure for use with asyncronous network requests.
+    /// - Parameter response: Response from the asyncronous request. `nil` if request failed altogether.
+    public typealias ResponseBlock = (_ response: Response?) -> Void
+
+    /// Send a plaintext message to Facebook user in the Messenger context asyncronously.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    /// - Parameter message: Plaintext message to be sent to the user
+    /// - Parameter handler: Optional handler of HTTP response
+    public func sendMessageAsync(toUserWithIdentifier identifier: SCMIdentifier,
+                                 withMessage message: String,
+                                 withResponseHandler handler: ResponseBlock? = nil) {
+        
+        // Activate sendMessage(toUserWithIdentifier:withMessage:) asyncronously
         DispatchQueue.global().async {
-            self.sendMessage(toUserWithIdentifier: identifier, withMessage: message)
+            let response = try? self.sendMessage(toUserWithIdentifier: identifier, withMessage: message)
+            
+            // Give user optional response
+            handler?(response)
         }
     }
     
-    fileprivate func sendMessage(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) {
-        do {
-            let messageData = JSON([
-                "recipient" : [
-                    "id": Node(identifier.string)
-                ],
-                "message" : [
-                    "text" : Node(message)
-                ]
-                ])
-            
-            let access_token = "EAATAd74WSvYBAFpstWfFB1fp3OJbqhL2lb1MddvxqxoduD23YqgdA1C5VXNKBBFR8qHTIMFcTEkzAqC5bZCLKZBPolvOitVxvqsxX3cHSE0KTF8Mq6URz8i3OdTivk2iQQikk99GTrIir1zvvXasyd9ZA6Y4rMhEPya61TO7QZDZD"
-            let url = "https://graph.facebook.com/v2.8/me/messages?access_token=" + access_token
-            let response = try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: messageData.makeBody())
-            
-            print(try? response.body.bytes!.toString() ?? "nil")
-            
-        } catch {
-            print("Unable to post")
-            return
-        }
+    /// Send a plaintext message to Facebook user in the Messenger context.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    /// - Parameter message: Plaintext message to be sent to the user
+    fileprivate func sendMessage(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) throws -> Response {
+        
+        // JSON payload constructing message to be sent
+        let messageData = JSON([
+            "recipient" : [
+                "id": Node(identifier.string)
+            ],
+            "message" : [
+                "text" : Node(message)
+            ]
+        ])
+        
+        // Create destination URL using base and configured Facebook Access Token
+        let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
+        return try sendJson(to: url, withPayload: messageData)
     }
+}
+
+// MARK: Show Typing
+extension SCMMessageHandler {
     
-    // MARK: Show Typing
-    
-    public func sendTypingAsync(toUserWithIdentifier identifier: SCMIdentifier) {
+    /// Send the typing indicator to Facebook user in the Messenger context.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    /// - Parameter handler: Optional handler of HTTP response
+    public func sendTypingAsync(toUserWithIdentifier identifier: SCMIdentifier,
+                                withResponseHandler handler: ResponseBlock? = nil) {
+        
+        // Activate sendTyping(toUserWithIdentifier:) asyncronously
         DispatchQueue.global().async {
-            self.sendTyping(toUserWithIdentifier: identifier)
+            let response = try? self.sendTyping(toUserWithIdentifier: identifier)
+            
+            // Give user optional response
+            handler?(response)
         }
     }
     
-    fileprivate func sendTyping(toUserWithIdentifier identifier: SCMIdentifier) {
-        do {
-            let messageData = JSON([
-                "recipient" : [
-                    "id": Node(identifier.string)
-                ],
-                "sender_action" : "typing_on"
-                ])
-            
-            let access_token = "EAATAd74WSvYBAFpstWfFB1fp3OJbqhL2lb1MddvxqxoduD23YqgdA1C5VXNKBBFR8qHTIMFcTEkzAqC5bZCLKZBPolvOitVxvqsxX3cHSE0KTF8Mq6URz8i3OdTivk2iQQikk99GTrIir1zvvXasyd9ZA6Y4rMhEPya61TO7QZDZD"
-            let url = SCMMessageHandler.urlBase + access_token
-            let response = try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: messageData.makeBody())
-            print(try? response.body.bytes!.toString() ?? "nil")
-            
-        } catch {
-            print("Unable to post")
-        }
+    /// Send the typing indicator to Facebook user in the Messenger context.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    fileprivate func sendTyping(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
+        
+        // JSON payload constructing typing message
+        let typingData = JSON([
+            "recipient" : [
+                "id": Node(identifier.string)
+            ],
+            "sender_action" : "typing_on"
+            ])
+        
+        // Create destination URL using base and configured Facebook Access Token
+        let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
+        return try sendJson(to: url, withPayload: typingData)
     }
 }
 
-
-//Chris Nagy's Code Start
-
-//If the actions was recognized, call that actions function and return true; else return false
-func findAction(index: Int, parsedText: [String],player: Player, area: Area) -> Bool{
-    switch parsedText[index] {
-        case "use":
-            use(index: index,parsedText: parsedText,player: player, area: area)
-            return true
-        case "go":
-            go(index: index,parsedText: parsedText,player: player, area: area)
-            return true
-        case "pickup":
-            pickUp(index: index,parsedText: parsedText,player: player, area: area)
-            return true
-        case "look":
-            look(index: index,parsedText: parsedText,player: player, area: area)
-            return true
-        case "inventory":
-            inventory(index: index,parsedText: parsedText,player: player, area: area)
-            return true
-        default:
-            return false
+// MARK: Helper Functions
+extension SCMMessageHandler {
+    
+    /// Send JSON-encoded payload to url
+    /// - Parameter url: Destination URL
+    /// - Parameter payload: JSON data to be sent
+    fileprivate func sendJson(to url: String, withPayload payload: JSON) throws -> Response {
+        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: payload.makeBody())
     }
-}
-//print player inventory 
-func inventory(index: Int, parsedText: [String],player: Player, area: Area) {
-    print("Inventory:\n")
-    for i in player.inventory {
-        print ("\(i.quantity)  \(i.name)(s) ")
-    }
-}
 
-//attempt to combine two items
-func use(index: Int, parsedText: [String],player: Player, area: Area) {
-    //check player inventory
-    for i in index..<parsedText.count{
-        print("\(i) = \(parsedText[i])")
-        for j in 0..<player.inventory.count{
-            //check if the first item is in inventory
-            if (parsedText[i] == player.inventory.array[j].name && player.inventory.array[j].quantity > 0){
-                //find second item in parsedText   
-                for i in i..<parsedText.count{
-                //check if the second item is viable to use with the first item 
-                    //for k
-                    //if (parsedText[i] == player.inventory.array[j].keywords)
-                }
-                //and that it is in the players inventory
-
-            }
-        }
-    }
-    print("You can't do that.\n")
-}
-
-//Pickup
-func pickUp(index: Int, parsedText: [String],player: Player, area: Area) {
-    //check environment inventory
-}
-
-
-
-//Go 
-func go(index: Int, parsedText: [String],player: Player, area: Area) {
-    //check Area paths
-}
-
-
-
-
-//Look
-func look(index: Int, parsedText: [String],player: Player, area: Area) {
-    //area or player inventory
 }
 
 
