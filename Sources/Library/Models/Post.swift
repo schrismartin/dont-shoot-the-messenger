@@ -2,21 +2,20 @@ import Vapor
 import Fluent
 import Foundation
 
-final class Post: Model {
-    var id: Node?
-    var content: String
-    
-    init(content: String) {
+public final class Post: Model {
+    public var id: Node?
+    public var content: String
+    public init(content: String) {
         self.id = UUID().uuidString.makeNode()
         self.content = content
     }
 
-    init(node: Node, in context: Context) throws {
+    public init(node: Node, in context: Context) throws {
         id = try node.extract("id")
         content = try node.extract("content")
     }
 
-    func makeNode(context: Context) throws -> Node {
+    public func makeNode(context: Context) throws -> Node {
         return try Node(node: [
             "id": id,
             "content": content
@@ -24,7 +23,7 @@ final class Post: Model {
     }
 }
 
-extension Post {
+public extension Post {
     /**
         This will automatically fetch from database, using example here to load
         automatically for example. Remove on real models.
@@ -35,11 +34,11 @@ extension Post {
 }
 
 extension Post: Preparation {
-    static func prepare(_ database: Database) throws {
+    public static func prepare(_ database: Database) throws {
         //
     }
 
-    static func revert(_ database: Database) throws {
+    public static func revert(_ database: Database) throws {
         //
     }
 }
