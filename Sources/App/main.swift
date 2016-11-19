@@ -153,14 +153,13 @@ drop.post("fbwebhook") { request in
     let handler = SCMMessageHandler(app: drop)
     handler.handleAsync(json: json, callback: { (payload) in
         
-        let message = payload.message
         let id = payload.senderId
         
-        print("Message Handled Successfully:", message, id)
+        print("Message Handled Successfully:", id)
         
         // Construct Endpoint
         guard let manager = SCMDatabaseManager() else { return }
-        guard let player = try manager.retrievePlayer(withId: id) else {
+        guard let player = try manager.retrievePlayer(withId: id), let message = payload.message else {
             
             // Create a new game
             var player = Player(id: id)

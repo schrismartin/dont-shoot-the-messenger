@@ -85,9 +85,7 @@ extension SCMMessageHandler {
         // Extract Components
         guard let senderId = payload["sender"]?["id"]?.string,
             let recipientId = payload["recipient"]?["id"]?.string,
-            let messageTime = payload["timestamp"]?.int,
-            let message = payload["message"],
-            let text = message["text"]?.string else {
+            let messageTime = payload["timestamp"]?.int else {
                 throw HandlerErrors.unexpectedEventFormat
         }
         
@@ -95,12 +93,23 @@ extension SCMMessageHandler {
         let returnedSenderId = SCMIdentifier(string: senderId)
         let returnedRecipientId = SCMIdentifier(string: recipientId)
         let returnedTime = Date(timeIntervalSince1970: TimeInterval(messageTime))
-        let payload = FBMessageEvent(senderId: returnedSenderId,
-                                       recipientId: returnedRecipientId,
-                                       date: returnedTime,
-                                       message: text)
         
-        return payload
+        // Message Branch
+        if let message = payload["message"], let text = message["text"]?.string {
+            let returned = FBMessageEvent(senderId: returnedSenderId, recipientId: returnedRecipientId,
+                                         date: returnedTime, message: text, postback: nil)
+            return returned
+        }
+        
+        // Postback Branch
+        if let postback = payload["message"], let payload = postback["text"]?.string {
+            let returned = FBMessageEvent(senderId: returnedSenderId, recipientId: returnedRecipientId,
+                                         date: returnedTime, message: nil, postback: payload)
+            return returned
+        }
+        
+        // Should reach one of those two events, throw an error if it gets here.
+        throw HandlerErrors.unexpectedEventFormat
     }
 }
 
@@ -170,6 +179,42 @@ extension SCMMessageHandler {
     /// Send the typing indicator to Facebook user in the Messenger context.
     /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
     fileprivate func sendTyping(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
+        
+        // JSON payload constructing typing message
+        let typingData = JSON([
+            "recipient" : [
+                "id": Node(identifier.string)
+            ],
+            "sender_action" : "typing_on"
+            ])
+        
+        // Create destination URL using base and configured Facebook Access Token
+        let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
+        return try sendJson(to: url, withPayload: typingData)
+    }
+}
+
+// MARK: Show Typing
+extension SCMMessageHandler {
+    
+    /// Send the typing indicator to Facebook user in the Messenger context.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    /// - Parameter handler: Optional handler of HTTP response
+    public func sendOptionsAsync(toUserWithIdentifier identifier: SCMIdentifier,
+                                withResponseHandler handler: ResponseBlock? = nil) {
+        
+        // Activate sendTyping(toUserWithIdentifier:) asyncronously
+        DispatchQueue.global().async {
+            let response = try? self.sendTyping(toUserWithIdentifier: identifier)
+            
+            // Give user optional response
+            handler?(response)
+        }
+    }
+    
+    /// Send the typing indicator to Facebook user in the Messenger context.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    fileprivate func sendOptions(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
         
         // JSON payload constructing typing message
         let typingData = JSON([
