@@ -4,7 +4,7 @@ import MongoKitten
 import HTTP
 import Foundation
 
-func buildAreas(using manager: SCMGameManager) -> Area? {
+func buildAreas(using manager: SCMDatabaseManager) -> Area? {
     //Create all area objects
     let forest = Area()
     let cave = Area()
@@ -150,8 +150,6 @@ drop.post("fbwebhook") { request in
     
     let json = try JSON(bytes: data)
     
-    
-    
     let handler = SCMMessageHandler(app: drop)
     handler.handleAsync(json: json, callback: { (payload) in
         
@@ -161,11 +159,11 @@ drop.post("fbwebhook") { request in
         print("Message Handled Successfully:", message, id)
         
         // Construct Endpoint
-        guard let manager = SCMGameManager() else { return }
+        guard let manager = SCMDatabaseManager() else { return }
         guard let player = try manager.retrievePlayer(withId: id) else {
             
             // Create a new game
-            let player = Player(id: id)
+            var player = Player(id: id)
             
             // Create initial location
             guard let initialLocation = buildAreas(using: manager) else { return }
@@ -180,7 +178,7 @@ drop.post("fbwebhook") { request in
             return
         }
         
-        guard let currentArea = try manager.retrieveArea(withId: player.currentArea) else { return }
+        guard let currentArea = try manager.retrieveArea(withId: player.currentArea!) else { return }
         // Parse User Message
         
         // Perform Changes based on user message

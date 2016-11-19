@@ -1,5 +1,7 @@
 # Don't Shoot the Messenger <img align="right" height="40" src="http://i.imgur.com/fSbWe8d.png">
+[![Swift 3.0](https://img.shields.io/badge/swift-3.0-orange.svg)](https://swift.org)
 [![Build Status](https://travis-ci.org/schrismartin/dont-shoot-the-messenger.svg?branch=develop)](https://travis-ci.org/schrismartin/dont-shoot-the-messenger)
+[![codecov](https://codecov.io/gh/schrismartin/dont-shoot-the-messenger/branch/develop/graph/badge.svg)](https://codecov.io/gh/schrismartin/dont-shoot-the-messenger)
 [![codebeat badge](https://codebeat.co/badges/45412375-3412-4938-8a5b-5ae9bc7e5964)](https://codebeat.co/projects/github-com-schrismartin-dont-shoot-the-messenger)
 
 ## Description
