@@ -10,9 +10,8 @@ import XCTest
 @testable import Library
 
 class SCMIdentifierTests: XCTestCase {
-    func conversionTest() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the
+    
+    func testConversion() {
         let ids = ["0000000000000000",
                    "1111111111111111",
                    "2222222222222222",
@@ -22,17 +21,21 @@ class SCMIdentifierTests: XCTestCase {
                    "6666666666666666",
                    "7777777777777777",
                    "8888888888888888",
-                   "9999999999999999"]
+                   "9999999999999999",
+                   "1",
+                   "Jimmy",
+                   "UnexpectedResult"]
         
         for string in ids {
-//            XCTAssert(
+            let identifier = SCMIdentifier(string: string)
+            XCTAssertNotNil(identifier.objectId)
         }
     }
     
     
     static var allTests : [(String, (SCMIdentifierTests) -> () throws -> Void)] {
         return [
-            ("conversionTest", conversionTest)
+            ("testConversion", testConversion)
         ]
     }
 }

@@ -3,5 +3,6 @@ import XCTest
 
 XCTMain([
      testCase(PostTests.allTests),
+     testCase(SCMIdentifierTests.allTests),
 ])
 

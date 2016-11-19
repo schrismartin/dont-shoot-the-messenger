@@ -20,7 +20,7 @@ public struct SCMIdentifier {
         do {
             switch hexRepresentation.count {
             case let x where x > 12:
-                let str = hexRepresentation.substring(to: string.index(string.startIndex, offsetBy: 12)).toBytes()
+                let str = hexRepresentation.substring(to: hexRepresentation.index(hexRepresentation.startIndex, offsetBy: 12)).toBytes()
                 return try ObjectId.init(bytes: str)
             case let x where x == 12:
                 let str = hexRepresentation.toBytes()
