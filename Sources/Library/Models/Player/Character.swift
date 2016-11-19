@@ -53,7 +53,7 @@ public struct Player {
 }
 
 // Add a document calculated property for easy database storage
-public extension Player {
+extension Player: DatabaseRepresentable {
     
     public init(document: Document) {
         // Grab id

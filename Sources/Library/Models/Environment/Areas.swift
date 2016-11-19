@@ -1,6 +1,6 @@
 import MongoKitten
 
-public class Area {
+public class Area: DatabaseRepresentable {
     public var id: ObjectId
 	public var name: String
 	public var inventory: Set<Item>
@@ -24,12 +24,8 @@ public class Area {
 		name = ""
 		visits = 0
 	}
-}
-
-// Add a document calculated property for easy database storage
-public extension Area {
     
-    public convenience init?(document: Document) {
+    public required convenience init(document: Document) {
         self.init()
         
         // Get identifiers

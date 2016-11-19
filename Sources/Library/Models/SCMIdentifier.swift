@@ -34,5 +34,7 @@ public struct SCMIdentifier {
         } catch {
             return nil
         }
+        
+        return nil
     }
 }
