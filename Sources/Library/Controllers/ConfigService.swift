@@ -26,7 +26,6 @@ public class ConfigService {
             return ""
         }
         
-        logLoad(str: env)
         return env
     }
     
@@ -36,7 +35,6 @@ public class ConfigService {
             return ""
         }
         
-        logLoad(str: env)
         return env
     }
     

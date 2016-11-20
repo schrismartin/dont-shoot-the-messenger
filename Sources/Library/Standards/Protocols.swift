@@ -24,7 +24,7 @@ public protocol DatabaseRepresentable {
 
 public class console {
     public static func log(_ string: String) {
-        fputs(string, stdout)
+        fputs("\(string)\n", stdout)
         fflush(stdout)
     }
 }
