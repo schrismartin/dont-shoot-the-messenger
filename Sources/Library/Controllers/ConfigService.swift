@@ -14,6 +14,6 @@ import Foundation
 public class ConfigService {
     public static let shared = ConfigService()
 
-    var facebookAccessToken: String = "EAATAd74WSvYBAPtS61XEFDMLuKjtsOtxw5rlgI3lWgzkv06mU7WHQH5YBklVu09Q0FqwsjQrD5vVtnZBYu5EKi0rWWP5BFlZBvuU58KfyeizwvzLetDj0l68KJAdljQxqQmJeZAuGpG6YaGKZCCtNp5cYHpJwUz1GHC0SDZA67AZDZD"
+    var facebookAccessToken: String = "EAATAd74WSvYBAFne0E17ZCJLgJ0GKoZBZCUD6tykvEGLuLrtgFDtH0bFHSXnuznCB6axTdzoNF4k9DdsFd6JlJHEfaX1DH9o5i2vsItIEZCNDXpMCL01Pzql0KMsFIZAtbzHhhrZBzkHf6b1K92GlQsRDjzKrg6x4Xz1l9SRLRwgZDZD"
     var mongoURI: String = "mongodb://master:dontshoot@ds151707.mlab.com:51707"
 }

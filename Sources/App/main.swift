@@ -171,7 +171,7 @@ drop.post("fbwebhook") { request in
             
             let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
             
-            handler.sendMessageAsync(toUserWithIdentifier: player.id, withMessage: introductoryText)
+            handler.sendTextMessageAsync(toUserWithIdentifier: player.id, withMessage: introductoryText)
             try manager.savePlayer(player: player)
             
             return
@@ -186,7 +186,18 @@ drop.post("fbwebhook") { request in
         
         // Provide response through messenger
         
-        handler.sendMessageAsync(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
+        if message == "buttons" {
+            let buttons = [
+                FBButton(type: .postback, title: "Button 1", payload: "Button1"),
+                FBButton(type: .postback, title: "Button 2", payload: "Button2"),
+                FBButton(type: .postback, title: "Button 3", payload: "Button3"),
+                FBButton(type: .postback, title: "Button 4", payload: "Button4")
+            ]
+            
+            handler.sendMessageWithButtonsAsync(toUserWithIdentifier: id, withMessage: "This has four buttons", withButtons: buttons)
+        }
+        
+        handler.sendTextMessageAsync(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
     })
 
     print("Request returning successfully")
