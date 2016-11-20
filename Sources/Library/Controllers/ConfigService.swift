@@ -11,9 +11,44 @@ import MongoKitten
 import HTTP
 import Foundation
 
+#if os(Linux)
+    import Glibc
+#else
+    import Darwin
+#endif
+
 public class ConfigService {
     public static let shared = ConfigService()
 
-    var facebookAccessToken: String = "EAATAd74WSvYBAFne0E17ZCJLgJ0GKoZBZCUD6tykvEGLuLrtgFDtH0bFHSXnuznCB6axTdzoNF4k9DdsFd6JlJHEfaX1DH9o5i2vsItIEZCNDXpMCL01Pzql0KMsFIZAtbzHhhrZBzkHf6b1K92GlQsRDjzKrg6x4Xz1l9SRLRwgZDZD"
-    var mongoURI: String = "mongodb://master:dontshoot@ds151707.mlab.com:51707"
+    var facebookAccessToken: String {
+        guard let env = getEnvVar(name: "FACEBOOK_ACCESS_TOKEN")  else {
+            print("Environment Variable FACEBOOK_ACCESS_TOKEN could not be found.")
+            return ""
+        }
+        
+        logLoad(str: env)
+        return env
+    }
+    
+    var mongoURI: String {
+        guard let env = getEnvVar(name: "MONGO_DB_URI") else {
+            print("Environment Variable MONGO_DB_URI could not be found.")
+            return ""
+        }
+        
+        logLoad(str: env)
+        return env
+    }
+    
+    private func getEnvVar(name: String) -> String? {
+        let secretEnv = Droplet().config["app", name]?.string
+        
+        guard let env = getenv(name),
+            let herokuEnv = String.init(validatingUTF8: env) else { return secretEnv }
+        return herokuEnv
+    }
+    
+    private func logLoad(str: String) {
+        print("Loaded environment variable as \(str)")
+    }
 }
