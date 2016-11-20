@@ -34,7 +34,7 @@ public func findAction(index: Int, parsedText: [String], player: Player, area: A
 }
 //print player inventory
 public func inventory(index: Int, parsedText: [String], player: Player, area: Area) {
-    print("Inventory:\n")
+    console.log("Inventory:\n")
     for i in player.inventory {
         print ("\(i.quantity)  \(i.name)(s) ")
     }
@@ -44,7 +44,7 @@ public func inventory(index: Int, parsedText: [String], player: Player, area: Ar
 public func use(index: Int, parsedText: [String], player: Player, area: Area) {
     //check player inventory
     for i in index..<parsedText.count{
-        print("\(i) = \(parsedText[i])")
+        console.log("\(i) = \(parsedText[i])")
         for j in 0..<player.inventory.count{
             //check if the first item is in inventory
             if (parsedText[i] == player.inventory.array[j].name && player.inventory.array[j].quantity > 0){
@@ -59,7 +59,7 @@ public func use(index: Int, parsedText: [String], player: Player, area: Area) {
             }
         }
     }
-    print("You can't do that.\n")
+    console.log("You can't do that.\n")
 }
 
 //Pickup

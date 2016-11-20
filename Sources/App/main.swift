@@ -123,7 +123,7 @@ func buildAreas(using manager: SCMDatabaseManager) -> Area? {
 let drop = Droplet()
 
 drop.get("/fbwebhook") { request in
-    print("get webhook")
+    console.log("get webhook")
     guard let token = request.data["hub.verify_token"]?.string else {
         throw Abort.badRequest
     }
@@ -132,7 +132,7 @@ drop.get("/fbwebhook") { request in
     }
     
     if token == "2318934571" {
-        print("send response")
+        console.log("send response")
         
         return res
     } else {
@@ -144,7 +144,7 @@ drop.post("fbwebhook") { request in
     
     guard let data = request.body.bytes else {
         // There was no real data
-        print("Data could not be determined")
+        console.log("Data could not be determined")
         return Response(status: .badRequest, body: "Data could not be determined")
     }
     
@@ -155,7 +155,7 @@ drop.post("fbwebhook") { request in
         
         let id = payload.senderId
         
-        print("Message Handled Successfully:", id)
+        console.log("Message Handled Successfully: \(id)")
         
         // Construct Endpoint
         guard let manager = SCMDatabaseManager() else { return }
@@ -195,12 +195,12 @@ drop.post("fbwebhook") { request in
             ]
             
             handler.sendMessageWithButtonsAsync(toUserWithIdentifier: id, withMessage: "This has four buttons", withButtons: buttons)
+        } else {
+            handler.sendTextMessageAsync(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
         }
-        
-        handler.sendTextMessageAsync(toUserWithIdentifier: id, withMessage: "You've already been here, please come back later.")
     })
 
-    print("Request returning successfully")
+    console.log("Request returning successfully")
     return Response(status: .ok)
 }
 

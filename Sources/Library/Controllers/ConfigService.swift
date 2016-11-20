@@ -22,7 +22,7 @@ public class ConfigService {
 
     var facebookAccessToken: String {
         guard let env = getEnvVar(name: "FACEBOOK_ACCESS_TOKEN")  else {
-            print("Environment Variable FACEBOOK_ACCESS_TOKEN could not be found.")
+            console.log("Environment Variable FACEBOOK_ACCESS_TOKEN could not be found.")
             return ""
         }
         
@@ -32,7 +32,7 @@ public class ConfigService {
     
     var mongoURI: String {
         guard let env = getEnvVar(name: "MONGO_DB_URI") else {
-            print("Environment Variable MONGO_DB_URI could not be found.")
+            console.log("Environment Variable MONGO_DB_URI could not be found.")
             return ""
         }
         
@@ -49,6 +49,6 @@ public class ConfigService {
     }
     
     private func logLoad(str: String) {
-        print("Loaded environment variable as \(str)")
+        console.log("Loaded environment variable as \(str)")
     }
 }

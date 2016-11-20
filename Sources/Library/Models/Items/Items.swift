@@ -10,7 +10,7 @@ let object = "torch"
 /*if let lightableObject = Item.new(name: object, quantity: 2) as? Lightable {
 	lightableObject.light()
 } else {
-	print("You can't do that, silly!")
+	console.log("You can't do that, silly!")
 }
 */
 

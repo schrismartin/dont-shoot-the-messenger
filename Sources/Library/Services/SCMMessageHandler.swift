@@ -52,7 +52,7 @@ extension SCMMessageHandler {
         
         // Print JSON output
         let output = try! Data(json.makeBody().bytes!).toString()
-        print(output)
+        console.log(output)
         
         // Extract top-level components
         guard let type = json["object"]?.string, type == "page",

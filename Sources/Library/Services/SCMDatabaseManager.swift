@@ -24,7 +24,7 @@ public class SCMDatabaseManager {
             
             self.database = mongoServer["dont-shoot-the-messenger"]
         } catch {
-            print("Could not connect to server. Exiting")
+            console.log("Could not connect to server. Exiting")
             return nil
         }
     }
