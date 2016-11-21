@@ -14,16 +14,19 @@ import HTTP
 public struct FBButton {
     
     public enum ButtonType: String {
+        case url = "web_url"
         case postback = "postback"
-        case webURL = "web_url"
+        case share = "element_share"
+        case logIn = "account_link"
+        case logOut = "account_unlink"
     }
     
-    public var type: ButtonType
+    public var buttonType: ButtonType
     public var title: String
     public var payload: String
     
     public init(type: ButtonType, title: String, payload: String) {
-        self.type = type
+        self.buttonType = type
         self.title = title
         self.payload = payload
     }
@@ -34,7 +37,7 @@ extension FBButton: JSONRepresentable, NodeRepresentable {
     
     public func makeNode(context: Context) throws -> Node {
         return Node([
-            "type": Node(type.rawValue),
+            "type": Node(buttonType.rawValue),
             "title": Node(title),
             "payload": Node(payload)
         ])

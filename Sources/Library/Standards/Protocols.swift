@@ -8,6 +8,7 @@
 
 import Foundation
 import MongoKitten
+import HTTP
 
 #if os(Linux)
     import Glibc
@@ -23,8 +24,15 @@ public protocol DatabaseRepresentable {
 }
 
 public class console {
-    public static func log(_ string: String) {
+    public static func log(_ string: String?) {
         fputs("\(string)\n", stdout)
         fflush(stdout)
+    }
+}
+
+extension Response {
+    public var bodyString: String? {
+        let data = Data(body.bytes!)
+        return try? data.toString()
     }
 }

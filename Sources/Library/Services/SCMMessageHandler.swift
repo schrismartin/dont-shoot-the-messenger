@@ -104,7 +104,7 @@ extension SCMMessageHandler {
         // Postback Branch
         if let postback = payload["message"], let payload = postback["text"]?.string {
             let returned = FBMessageEvent(senderId: returnedSenderId, recipientId: returnedRecipientId,
-                                         date: returnedTime, message: nil, postback: payload)
+                                          date: returnedTime, message: nil, postback: payload)
             return returned
         }
         
@@ -117,7 +117,7 @@ extension SCMMessageHandler {
 extension SCMMessageHandler {
     /// Closure for use with asyncronous network requests.
     /// - Parameter response: Response from the asyncronous request. `nil` if request failed altogether.
-    public typealias ResponseBlock = (Response?) -> Void
+    public typealias ResponseBlock = (Response?) -> (Void)
 }
 
 // MARK: Send Messages
@@ -157,7 +157,7 @@ extension SCMMessageHandler {
         
         // Create destination URL using base and configured Facebook Access Token
         let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
-        return try sendJson(to: url, withPayload: messageData)
+        return try sendMessage(to: url, withPayload: messageData)
     }
 }
 
@@ -193,7 +193,7 @@ extension SCMMessageHandler {
         
         // Create destination URL using base and configured Facebook Access Token
         let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
-        return try sendJson(to: url, withPayload: typingData)
+        return try sendMessage(to: url, withPayload: typingData)
     }
 }
 
@@ -247,7 +247,7 @@ extension SCMMessageHandler {
         
         // Create destination URL using base and configured Facebook Access Token
         let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
-        return try sendJson(to: url, withPayload: buttonData)
+        return try sendMessage(to: url, withPayload: buttonData)
     }
 }
 
@@ -257,8 +257,24 @@ extension SCMMessageHandler {
     /// Send JSON-encoded payload to url
     /// - Parameter url: Destination URL
     /// - Parameter payload: JSON data to be sent
-    fileprivate func sendJson(to url: String, withPayload payload: JSON) throws -> Response {
-        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: payload.makeBody())
+    public func sendMessage(_ message: FBMessage, withResponseHandler handler: ResponseBlock? = nil) {
+        let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
+        
+        // Activate sendTyping(toUserWithIdentifier:) asyncronously
+        DispatchQueue.global().async {
+            let response = try? self.sendMessage(to: url, withPayload: message)
+            
+            // Give user optional response
+            handler?(response)
+        }
+    }
+    
+    /// Send JSON-encoded payload to url
+    /// - Parameter url: Destination URL
+    /// - Parameter payload: JSON data to be sent
+    fileprivate func sendMessage(to url: String, withPayload payload: JSONRepresentable) throws -> Response {
+        let json = try payload.makeJSON()
+        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
     }
 
 }
