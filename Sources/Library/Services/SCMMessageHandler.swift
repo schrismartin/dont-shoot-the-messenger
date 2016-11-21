@@ -40,7 +40,7 @@ extension SCMMessageHandler {
         // Run Asyncronously
         DispatchQueue.global().async {
             do { try self.handle(json: json, callback: callback) } catch {
-                fatalError("Must be implemented")
+                console.log("Issue encountered in handling: \(error)")
             }
         }
     }
@@ -69,7 +69,7 @@ extension SCMMessageHandler {
         for data in events {
             
             // Extract payload
-            let event = try extractEvent(from: data)
+            guard let event = try? extractEvent(from: data) else { continue }
             
             // User feedback
             self.sendTypingIndicatorAsync(toUserWithIdentifier: event.senderId)
