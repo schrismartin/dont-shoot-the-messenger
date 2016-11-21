@@ -66,7 +66,7 @@ extension SCMMessageHandler {
             .flatMap { $0 }
         
         // Traverse each event and activate callback handler for each
-        for data in events where data["message"] != nil {
+        for data in events {
             
             // Extract payload
             let event = try extractEvent(from: data)
