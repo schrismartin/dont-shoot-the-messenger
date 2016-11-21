@@ -69,11 +69,11 @@ extension SCMMessageHandler {
         for data in events where data["message"] != nil {
             
             // Extract payload
-            let payload = try extractEvent(from: data)
+            let event = try extractEvent(from: data)
             
             // User feedback
-            self.sendTypingIndicatorAsync(toUserWithIdentifier: payload.senderId)
-            try callback(payload)
+            self.sendTypingIndicatorAsync(toUserWithIdentifier: event.senderId)
+            try callback(event)
             
         }
     }
@@ -102,7 +102,7 @@ extension SCMMessageHandler {
         }
         
         // Postback Branch
-        if let postback = payload["message"], let payload = postback["text"]?.string {
+        if let postback = payload["postback"], let payload = postback["payload"]?.string {
             let returned = FBMessageEvent(senderId: returnedSenderId, recipientId: returnedRecipientId,
                                           date: returnedTime, message: nil, postback: payload)
             return returned

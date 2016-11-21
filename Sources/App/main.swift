@@ -120,6 +120,27 @@ func buildAreas(using manager: SCMDatabaseManager) -> Area? {
     }
 }
 
+func makeNewGame(manager: SCMDatabaseManager, handler: SCMMessageHandler, id: SCMIdentifier) {
+    // Create a new game
+    var player = Player(id: id)
+    
+    // Create initial location
+    guard let initialLocation = buildAreas(using: manager) else { return }
+    
+    player.currentArea = initialLocation.id
+    
+    let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
+    
+    let message = FBMessage(text: introductoryText, recipientId: player.id)
+    handler.sendMessage(message)
+    
+    try? manager.savePlayer(player: player)
+}
+
+
+
+
+
 let drop = Droplet()
 
 drop.get("/fbwebhook") { request in
@@ -154,62 +175,56 @@ drop.post("fbwebhook") { request in
     handler.handleAsync(json: json, callback: { (payload) in
         
         let id = payload.senderId
-        
-        console.log("Message Handled Successfully: \(id)")
-        
-        // Construct Endpoint
         guard let manager = SCMDatabaseManager() else { return }
-        guard let player = try manager.retrievePlayer(withId: id), let message = payload.message else {
-            
-            // Create a new game
-            var player = Player(id: id)
-            
-            // Create initial location
-            guard let initialLocation = buildAreas(using: manager) else { return }
-            
-            player.currentArea = initialLocation.id
-            
-            let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
-            
-            let message = FBMessage(text: introductoryText, recipientId: player.id)
-            handler.sendMessage(message)
-            
-            try manager.savePlayer(player: player)
-            
-            return
-        }
         
-        guard let currentArea = try manager.retrieveArea(withId: player.currentArea!) else { return }
-        // Parse User Message
-        
-        // Perform Changes based on user message
-        
-        // Save state to db
-        
-        // Provide response through messenger
-        
-        if message == "buttons" {
-            let buttons = [
-                FBButton(type: .postback, title: "Button 1", payload: "Button1"),
-                FBButton(type: .postback, title: "Button 2", payload: "Button2"),
-                FBButton(type: .postback, title: "Button 3", payload: "Button3")
-            ]
-            
-            let message = FBMessage(text: "This message has buttons", recipientId: id)
-            for button in buttons {
-                try? message.addButton(button: button)
+        if let message = payload.message {
+            guard let player = try? manager.retrievePlayer(withId: id) else {
+                makeNewGame(manager: manager, handler: handler, id: id)
+                return
             }
             
-            handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
-                console.log(response?.bodyString)
-            })
-            
-        } else {
-            let message = FBMessage(text: "You've already been here, please come back later.", recipientId: id)
-            handler.sendMessage(message, withResponseHandler: { (response) -> (Void) in
-                console.log(response?.bodyString)
-            })
+            if message == "buttons" {
+                let buttons = [
+                    FBButton(type: .postback, title: "Button 1", payload: "Button1"),
+                    FBButton(type: .postback, title: "Button 2", payload: "Button2"),
+                    FBButton(type: .postback, title: "Button 3", payload: "Button3")
+                ]
+                
+                let message = FBMessage(text: "This message has buttons!", recipientId: id)
+                for button in buttons {
+                    try? message.addButton(button: button)
+                }
+                
+                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
+                    console.log(response?.bodyString)
+                })
+                
+            } else {
+                let message = FBMessage(text: "You've already been here, please come back later.", recipientId: id)
+                handler.sendMessage(message, withResponseHandler: { (response) -> (Void) in
+                    console.log(response?.bodyString)
+                })
+            }
         }
+        
+        if let postback = payload.postback {
+            guard let recognizedPostback = Postback(rawValue: postback) else {
+                // We got a postback, but it is unrecognized.
+                
+                let message = FBMessage(text: "Received Postback: \(postback)", recipientId: id)
+                handler.sendMessage(message)
+                return
+            }
+            
+            switch recognizedPostback {
+            case .getStartedButtonPressed:
+                
+                makeNewGame(manager: manager, handler: handler, id: id)
+                return
+            }
+            
+        }
+        
     })
 
     console.log("Request returning successfully")
