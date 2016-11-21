@@ -120,47 +120,6 @@ extension SCMMessageHandler {
     public typealias ResponseBlock = (Response?) -> (Void)
 }
 
-// MARK: Send Messages
-extension SCMMessageHandler {
-
-    /// Send a plaintext message to Facebook user in the Messenger context asyncronously.
-    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    /// - Parameter message: Plaintext message to be sent to the user
-    /// - Parameter handler: Optional handler of HTTP response
-    public func sendTextMessageAsync(toUserWithIdentifier identifier: SCMIdentifier,
-                                 withMessage message: String,
-                                 withResponseHandler handler: ResponseBlock? = nil) {
-        
-        // Activate sendMessage(toUserWithIdentifier:withMessage:) asyncronously
-        DispatchQueue.global().async {
-            let response = try? self.sendTextMessage(toUserWithIdentifier: identifier, withMessage: message)
-            
-            // Give user optional response
-            handler?(response)
-        }
-    }
-    
-    /// Send a plaintext message to Facebook user in the Messenger context.
-    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    /// - Parameter message: Plaintext message to be sent to the user
-    fileprivate func sendTextMessage(toUserWithIdentifier identifier: SCMIdentifier, withMessage message: String) throws -> Response {
-        
-        // JSON payload constructing message to be sent
-        let messageData = JSON([
-            "recipient" : [
-                "id": Node(identifier.string)
-            ],
-            "message" : [
-                "text" : Node(message)
-            ]
-        ])
-        
-        // Create destination URL using base and configured Facebook Access Token
-        let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
-        return try sendMessage(to: url, withPayload: messageData)
-    }
-}
-
 // MARK: Show Typing
 extension SCMMessageHandler {
     
@@ -197,60 +156,6 @@ extension SCMMessageHandler {
     }
 }
 
-// MARK: Show Typing
-extension SCMMessageHandler {
-    
-    /// Send the typing indicator to Facebook user in the Messenger context.
-    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    /// - Parameter handler: Optional handler of HTTP response
-    public func sendMessageWithButtonsAsync(toUserWithIdentifier identifier: SCMIdentifier,
-                                            withMessage message: String,
-                                            withButtons buttons: [FBButton],
-                                            withResponseHandler handler: ResponseBlock? = nil) {
-        
-        // Activate sendTyping(toUserWithIdentifier:) asyncronously
-        DispatchQueue.global().async {
-            let response = try? self.sendMessageWithButtons(toUserWithIdentifier: identifier,
-                                                            withMessage: message,
-                                                            withButtons: buttons)
-            
-            // Give user optional response
-            handler?(response)
-        }
-    }
-    
-    /// Send the typing indicator to Facebook user in the Messenger context.
-    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    fileprivate func sendMessageWithButtons(toUserWithIdentifier identifier: SCMIdentifier,
-                                            withMessage message: String,
-                                            withButtons buttons: [FBButton]) throws -> Response {
-        
-        // Convert buttons to nodes
-        let buttonNodes = buttons.flatMap { try? $0.makeNode() }
-        
-        // JSON payload constructing typing message
-        let buttonData = JSON([
-            "recipient" : [
-                "id": Node(identifier.string)
-            ],
-            "message" : [
-                "attachment" : [
-                    "type": "template",
-                    "payload": [
-                        "template_type":"button",
-                        "text": Node(message),
-                        "buttons": Node(buttonNodes)
-                    ]
-                ]
-            ]
-        ])
-        
-        // Create destination URL using base and configured Facebook Access Token
-        let url = SCMMessageHandler.urlBase + ConfigService.shared.facebookAccessToken
-        return try sendMessage(to: url, withPayload: buttonData)
-    }
-}
-
 // MARK: Helper Functions
 extension SCMMessageHandler {
     
@@ -274,6 +179,9 @@ extension SCMMessageHandler {
     /// - Parameter payload: JSON data to be sent
     fileprivate func sendMessage(to url: String, withPayload payload: JSONRepresentable) throws -> Response {
         let json = try payload.makeJSON()
+        
+        console.log("Message Sent with JSON: \(json.bodyString)")
+        
         return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
     }
 

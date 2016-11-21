@@ -9,6 +9,7 @@
 import Foundation
 import MongoKitten
 import HTTP
+import JSON
 
 #if os(Linux)
     import Glibc
@@ -33,6 +34,13 @@ public class console {
 extension Response {
     public var bodyString: String? {
         let data = Data(body.bytes!)
+        return try? data.toString()
+    }
+}
+
+extension JSON {
+    public var bodyString: String? {
+        let data = Data(makeBody().bytes!)
         return try? data.toString()
     }
 }
