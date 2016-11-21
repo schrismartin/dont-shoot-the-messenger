@@ -192,13 +192,12 @@ drop.post("fbwebhook") { request in
             let buttons = [
                 FBButton(type: .postback, title: "Button 1", payload: "Button1"),
                 FBButton(type: .postback, title: "Button 2", payload: "Button2"),
-                FBButton(type: .postback, title: "Button 3", payload: "Button3"),
-                FBButton(type: .postback, title: "Button 4", payload: "Button4")
+                FBButton(type: .postback, title: "Button 3", payload: "Button3")
             ]
             
             let message = FBMessage(text: "This message has buttons", recipientId: id)
             for button in buttons {
-                message.addButton(button: button)
+                try? message.addButton(button: button)
             }
             
             handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in

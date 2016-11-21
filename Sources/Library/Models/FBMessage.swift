@@ -24,6 +24,7 @@ public class FBMessage {
     public enum FBMessageError: Error {
         case noMessage
         case notImplemented
+        case tooManyButtons
     }
     
     fileprivate var buttons: [FBButton] = []
@@ -37,7 +38,11 @@ public class FBMessage {
         self.recipientId = recipientId
     }
     
-    public func addButton(button: FBButton) {
+    public func addButton(button: FBButton) throws {
+        guard buttons.count < 3 else {
+            throw FBMessageError.tooManyButtons
+        }
+        
         buttons.append(button)
     }
     
