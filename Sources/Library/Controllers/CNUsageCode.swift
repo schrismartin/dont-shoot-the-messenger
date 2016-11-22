@@ -49,7 +49,7 @@ public func use(index: Int, parsedText: [String], player: Player, area: Area) {
             //check if the first item is in inventory
             if (parsedText[i] == player.inventory.array[j].name && player.inventory.array[j].quantity > 0){
                 //find second item in parsedText
-                for i in i..<parsedText.count{
+                for _ in i..<parsedText.count{
                     //check if the second item is viable to use with the first item
                     //for k
                     //if (parsedText[i] == player.inventory.array[j].keywords)

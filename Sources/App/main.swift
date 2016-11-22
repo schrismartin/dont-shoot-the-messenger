@@ -196,13 +196,13 @@ drop.post("fbwebhook") { request in
                 }
                 
                 handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
-                    console.log(response?.bodyString)
+                    console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
             } else {
                 let message = FBMessage(text: "You've already been here, please come back later.", recipientId: id)
                 handler.sendMessage(message, withResponseHandler: { (response) -> (Void) in
-                    console.log(response?.bodyString)
+                    console.log("Already been here response: \(response?.bodyString)")
                 })
             }
         }

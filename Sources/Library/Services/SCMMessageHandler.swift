@@ -109,6 +109,7 @@ extension SCMMessageHandler {
         }
         
         // Should reach one of those two events, throw an error if it gets here.
+        console.log("Unrecognized event received: \(payload.bodyString)")
         throw HandlerErrors.unexpectedEventFormat
     }
 }
