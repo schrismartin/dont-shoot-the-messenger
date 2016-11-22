@@ -8,14 +8,15 @@
 
 import Foundation
 
-public struct FBMessagePayload {
+public struct FBMessageEvent {
     public var senderId: SCMIdentifier
     public var recipientId: SCMIdentifier
     public var date: Date
-    public var message: String
+    public var message: String?
+    public var postback: String?
 }
 
-extension FBMessagePayload: CustomStringConvertible {
+extension FBMessageEvent: CustomStringConvertible {
     public var description: String {
         return "Sender: \(senderId.string), Recipient: \(recipientId.string), Message: \(message), date: \(date)"
     }
