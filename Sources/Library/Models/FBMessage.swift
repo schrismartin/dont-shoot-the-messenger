@@ -25,9 +25,11 @@ public class FBMessage {
         case noMessage
         case notImplemented
         case tooManyButtons
+        case tooManyQuickReplies
     }
     
     fileprivate var buttons: [FBButton] = []
+    fileprivate var quickReplies: [FBQuickReply] = []
     public var recipientId: SCMIdentifier
     public var messageText: String
     public var urlType: URLType = .none
@@ -39,6 +41,8 @@ public class FBMessage {
     }
     
     public func addButton(button: FBButton) throws {
+        
+        // Prevent addition of more than 3 buttons
         guard buttons.count < 3 else {
             throw FBMessageError.tooManyButtons
         }
@@ -49,6 +53,16 @@ public class FBMessage {
     public func clearButtons() {
         buttons.removeAll()
     }
+    
+    public func addQuickReply(reply: FBQuickReply) throws {
+        
+        // Prevent addition of more than 11 quick replies
+        guard quickReplies.count < 11 else {
+            throw FBMessageError.tooManyQuickReplies
+        }
+        
+        quickReplies.append(reply)
+    }
 
 }
 
@@ -56,57 +70,64 @@ extension FBMessage: JSONRepresentable, NodeRepresentable {
     
     public func makeNode(context: Context) throws -> Node {
         
-        if !buttons.isEmpty {
-            return try makeMessage(withAttachment: buttonAttachment)
-        }
+        // Construct Base
+        var base: [String: Node]
         
+        // Determine base JSON payload
         switch urlType {
         case .none:
             
             if buttons.count != 0 {
-                return try makeMessage(withAttachment: buttonAttachment)
+                base = makeMessage(withAttachment: buttonAttachment)
             } else {
-                return plainMessage
+                base = plainMessage
             }
             
         default:
             throw FBMessageError.notImplemented
-            
         }
+        
+        // Add optional quick replies
+        if !quickReplies.isEmpty {
+            let quickReplies = self.quickReplies.flatMap { try? $0.makeNode() }
+            base["message"]?["quick_replies"] = Node(quickReplies)
+        }
+        
+        return Node(base)
     }
     
-    private func makeMessage(withAttachment attachment: Node) throws -> Node {
-        return Node([
+    private func makeMessage(withAttachment attachment: [String: Node]) -> [String: Node] {
+        return [
             "recipient" : [
                 "id": Node(recipientId.string)
             ],
             "message": [
-                "attachment" : attachment
+                "attachment" : Node(attachment)
             ]
-        ])
+        ]
     }
     
-    private var plainMessage: Node {
-        return Node([
+    private var plainMessage: [String: Node] {
+        return [
             "recipient" : [
                 "id": Node(recipientId.string)
             ],
             "message" : [
                 "text" : Node(messageText)
             ]
-        ])
+        ]
     }
     
-    private var buttonAttachment: Node {
+    private var buttonAttachment: [String: Node] {
         let buttonsNode = buttons.flatMap { try? $0.makeNode() }
         
-        return Node([
+        return [
             "type": "template",
             "payload": [
                 "template_type": "button",
                 "text": Node(messageText),
                 "buttons": Node(buttonsNode)
             ]
-        ])
+        ]
     }
 }

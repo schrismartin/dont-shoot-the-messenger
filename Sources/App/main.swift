@@ -199,6 +199,66 @@ drop.post("fbwebhook") { request in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
+            } else if let num = Int(message) {
+                
+                let responses = [
+                    FBQuickReply(title: "One"),
+                    FBQuickReply(title: "Two"),
+                    FBQuickReply(title: "Three"),
+                    FBQuickReply(title: "Four"),
+                    FBQuickReply(title: "Five"),
+                    FBQuickReply(title: "Six"),
+                    FBQuickReply(title: "Seven"),
+                    FBQuickReply(title: "Eight"),
+                    FBQuickReply(title: "Nine"),
+                    FBQuickReply(title: "Ten"),
+                    FBQuickReply(title: "Eleven")
+                ]
+                
+                let message = FBMessage(text: "This message has quick responses!", recipientId: id)
+                
+                for (index, response) in responses.enumerated() where index < num {
+                    try? message.addQuickReply(reply: response)
+                }
+                
+                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
+                    console.log("Button Message Response: \(response?.bodyString)")
+                })
+            } else if message == "buttons qr" {
+                
+                let buttons = [
+                    FBButton(type: .postback, title: "Button 1", payload: "Button1"),
+                    FBButton(type: .postback, title: "Button 2", payload: "Button2"),
+                    FBButton(type: .postback, title: "Button 3", payload: "Button3")
+                ]
+                
+                let responses = [
+                    FBQuickReply(title: "One"),
+                    FBQuickReply(title: "Two"),
+                    FBQuickReply(title: "Three"),
+                    FBQuickReply(title: "Four"),
+                    FBQuickReply(title: "Five"),
+                    FBQuickReply(title: "Six"),
+                    FBQuickReply(title: "Seven"),
+                    FBQuickReply(title: "Eight"),
+                    FBQuickReply(title: "Nine"),
+                    FBQuickReply(title: "Ten"),
+                    FBQuickReply(title: "Eleven")
+                ]
+                
+                let message = FBMessage(text: "This message has buttons!", recipientId: id)
+                for button in buttons {
+                    try? message.addButton(button: button)
+                }
+                
+                for response in responses{
+                    try? message.addQuickReply(reply: response)
+                }
+                
+                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
+                    console.log("Button Message Response: \(response?.bodyString)")
+                })
+                
             } else {
                 let message = FBMessage(text: "You've already been here, please come back later.", recipientId: id)
                 handler.sendMessage(message, withResponseHandler: { (response) -> (Void) in

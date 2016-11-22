@@ -25,7 +25,7 @@ public struct FBButton {
     public var title: String
     public var payload: String
     
-    public init(type: ButtonType, title: String, payload: String) {
+    public init(type: ButtonType = .postback, title: String, payload: String) {
         self.buttonType = type
         self.title = title
         self.payload = payload
