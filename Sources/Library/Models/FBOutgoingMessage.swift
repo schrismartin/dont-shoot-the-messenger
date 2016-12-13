@@ -1,5 +1,5 @@
 //
-//  FBMessage.swift
+//  FBOutgoingMessage.swift
 //  dont-shoot-the-messenger
 //
 //  Created by Chris Martin on 11/20/16.
@@ -11,7 +11,7 @@ import MongoKitten
 import Vapor
 import HTTP
 
-public class FBMessage {
+public class FBOutgoingMessage {
     
     public enum URLType {
         case none
@@ -21,7 +21,7 @@ public class FBMessage {
         case file
     }
     
-    public enum FBMessageError: Error {
+    public enum FBOutgoingMessageError: Error {
         case noMessage
         case notImplemented
         case tooManyButtons
@@ -44,7 +44,7 @@ public class FBMessage {
         
         // Prevent addition of more than 3 buttons
         guard buttons.count < 3 else {
-            throw FBMessageError.tooManyButtons
+            throw FBOutgoingMessageError.tooManyButtons
         }
         
         buttons.append(button)
@@ -58,7 +58,7 @@ public class FBMessage {
         
         // Prevent addition of more than 11 quick replies
         guard quickReplies.count < 11 else {
-            throw FBMessageError.tooManyQuickReplies
+            throw FBOutgoingMessageError.tooManyQuickReplies
         }
         
         quickReplies.append(reply)
@@ -66,7 +66,20 @@ public class FBMessage {
 
 }
 
-extension FBMessage: JSONRepresentable, NodeRepresentable {
+extension FBOutgoingMessage: Hashable, Equatable {
+    
+    public var hashValue: Int {
+        // TODO: Make actual hashvalue
+        return recipientId.string.hashValue ^ messageText.hashValue
+    }
+    
+    static public func ==(lhs: FBOutgoingMessage, rhs: FBOutgoingMessage) -> Bool {
+        return lhs.hashValue == rhs.hashValue
+    }
+    
+}
+
+extension FBOutgoingMessage: JSONRepresentable, NodeRepresentable {
     
     public func makeNode(context: Context) throws -> Node {
         
@@ -84,7 +97,7 @@ extension FBMessage: JSONRepresentable, NodeRepresentable {
             }
             
         default:
-            throw FBMessageError.notImplemented
+            throw FBOutgoingMessageError.notImplemented
         }
         
         // Add optional quick replies

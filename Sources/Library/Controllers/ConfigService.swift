@@ -17,10 +17,9 @@ import Foundation
     import Darwin
 #endif
 
-public class ConfigService {
-    public static let shared = ConfigService()
+public class SCMConfig {
 
-    var facebookAccessToken: String {
+    public static var facebookAccessToken: String {
         guard let env = getEnvVar(name: "FACEBOOK_ACCESS_TOKEN")  else {
             console.log("Environment Variable FACEBOOK_ACCESS_TOKEN could not be found.")
             return ""
@@ -29,7 +28,7 @@ public class ConfigService {
         return env
     }
     
-    var mongoURI: String {
+    public static var mongoURI: String {
         guard let env = getEnvVar(name: "MONGO_DB_URI") else {
             console.log("Environment Variable MONGO_DB_URI could not be found.")
             return ""
@@ -38,7 +37,7 @@ public class ConfigService {
         return env
     }
     
-    private func getEnvVar(name: String) -> String? {
+    private static func getEnvVar(name: String) -> String? {
         let secretEnv = Droplet().config["app", name]?.string
         
         guard let env = getenv(name),
@@ -46,7 +45,7 @@ public class ConfigService {
         return herokuEnv
     }
     
-    private func logLoad(str: String) {
+    private static func logLoad(str: String) {
         console.log("Loaded environment variable as \(str)")
     }
 }
