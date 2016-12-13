@@ -36,6 +36,7 @@ drop.post("fbwebhook") { request in
     
     let handler = SCMMessageHandler(app: drop)
     handler.handleAsync(json: json, callback: { (message) in
+
         
         let gameManager = SCMGameStateManager(messageHandler: handler)
         gameManager.handleIncomingMessage(message)
