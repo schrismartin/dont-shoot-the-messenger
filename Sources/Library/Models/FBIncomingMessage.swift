@@ -34,14 +34,9 @@ public struct FBIncomingMessage {
         self.senderId = SCMIdentifier(string: senderId)
         self.recipientId = SCMIdentifier(string: recipientId)
         self.date = Date(timeIntervalSince1970: TimeInterval(timestamp))
-        self.text = json[ "message" ]?[ "text" ]?.string
-        self.postback = json[ "postback" ]?[ "payload" ]?.string
         
-        // Error Checking
-        guard postback != nil || text != nil else {
-            console.log("Facebook Message must contain either message or payload")
-            return nil
-        }
+        text = json[ "message" ]?[ "text" ]?.string
+        postback = json[ "postback" ]?[ "payload" ]?.string
     }
 }
 
