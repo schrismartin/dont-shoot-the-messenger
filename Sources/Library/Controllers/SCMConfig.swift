@@ -37,6 +37,17 @@ public class SCMConfig {
         return env
     }
     
+    public static var readDelay: Int {
+        let defaultValue = 2
+        
+        guard let delay = getEnvVar(name: "") else {
+            console.log("Environment Variable READ_TIME could not be found")
+            return defaultValue
+        }
+        
+        return Int(delay) ?? defaultValue
+    }
+    
     private static func getEnvVar(name: String) -> String? {
         let secretEnv = Droplet().config["app", name]?.string
         

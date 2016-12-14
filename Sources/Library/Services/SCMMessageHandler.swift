@@ -41,7 +41,7 @@ extension SCMMessageHandler {
         // Run Asyncronously
         DispatchQueue(label: "Handler").async {
             do { try self.handle(json: json, callback: callback) } catch {
-                console.log("Issue encountered in handling: \(error)")
+                console.log("Issue encountered in handling. Error: \(error)")
             }
         }
     }
@@ -69,49 +69,14 @@ extension SCMMessageHandler {
         // Traverse each event and activate callback handler for each
         for data in events {
             
-            // Extract payload
-            guard let event = try? extractEvent(from: data) else { continue }
+            // Extract payload, skip if failure
+            guard let event = FBIncomingMessage(json: data) else { continue }
             
             // User feedback
             self.sendTypingIndicatorAsync(toUserWithIdentifier: event.senderId)
             try callback(event)
             
         }
-    }
-    
-    /// Constructs an expected Facebook Messenger event from the received JSON data
-    /// - Parameter event: The JSON payload representation of an event
-    fileprivate func extractEvent(from payload: JSON) throws -> FBIncomingMessage {
-        
-        // Extract Components
-        guard let senderId = payload["sender"]?["id"]?.string,
-            let recipientId = payload["recipient"]?["id"]?.string,
-            let messageTime = payload["timestamp"]?.int else {
-                throw HandlerErrors.unexpectedEventFormat
-        }
-        
-        // Construct Payload
-        let returnedSenderId = SCMIdentifier(string: senderId)
-        let returnedRecipientId = SCMIdentifier(string: recipientId)
-        let returnedTime = Date(timeIntervalSince1970: TimeInterval(messageTime))
-        
-        // Message Branch
-        if let message = payload["message"], let text = message["text"]?.string {
-            let returned = FBIncomingMessage(senderId: returnedSenderId, recipientId: returnedRecipientId,
-                                         date: returnedTime, text: text, postback: nil)
-            return returned
-        }
-        
-        // Postback Branch
-        if let postback = payload["postback"], let payload = postback["payload"]?.string {
-            let returned = FBIncomingMessage(senderId: returnedSenderId, recipientId: returnedRecipientId,
-                                          date: returnedTime, text: nil, postback: payload)
-            return returned
-        }
-        
-        // Should reach one of those two events, throw an error if it gets here.
-        console.log("Unrecognized event received: \(payload.bodyString)")
-        throw HandlerErrors.unexpectedEventFormat
     }
 }
 
@@ -188,6 +153,9 @@ extension SCMMessageHandler {
         return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
     }
     
+    /// Send a group of messages to the user at a delay, where the last message is able to be read
+    /// by the time the next one sends
+    /// - Parameter messages: Array of messages to be sent
     public func sendGroupedMessages(_ messages: [FBOutgoingMessage]) {
         guard let userIdentifier = messages.first?.recipientId else { return }
         sendTypingIndicatorAsync(toUserWithIdentifier: userIdentifier)
@@ -208,7 +176,7 @@ extension SCMMessageHandler {
                 
             })
             
-            executeTime = executeTime + sendDelay + 3
+            executeTime = executeTime + sendDelay + 2
             
         }
     }
@@ -218,6 +186,8 @@ extension SCMMessageHandler {
 // MARK: Utility Functions
 extension SCMMessageHandler {
     
+    /// Calculate the time it takes to read a message
+    /// - Parameter message: FBOutgoing with message to determine the time for
     fileprivate func getMessageSendDelay(for message: FBOutgoingMessage) -> Double {
         
         let charactersPerSecond: Double = 24

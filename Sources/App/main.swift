@@ -32,16 +32,25 @@ drop.post("fbwebhook") { request in
         return Response(status: .badRequest, body: "Data could not be determined")
     }
     
-    let json = try JSON(bytes: data)
+    do {
+        
+        let json = try JSON(bytes: data)
     
-    let handler = SCMMessageHandler(app: drop)
-    handler.handleAsync(json: json, callback: { (message) in
+    
+        let handler = SCMMessageHandler(app: drop)
+        handler.handleAsync(json: json, callback: { (message) in
 
+            
+            let gameManager = SCMGameStateManager(messageHandler: handler)
+            gameManager.handleIncomingMessage(message)
+            
+        })
         
-        let gameManager = SCMGameStateManager(messageHandler: handler)
-        gameManager.handleIncomingMessage(message)
-        
-    })
+    } catch let error {
+        console.log("There was an issue handling the request: \(try? data.toString()) - Error: \(error)")
+        return Response(status: .badRequest , body: "Data could not be determined")
+    }
+    
 
     console.log("Request returning successfully")
     return Response(status: .ok)
