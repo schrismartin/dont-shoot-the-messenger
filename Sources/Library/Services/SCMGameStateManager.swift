@@ -23,14 +23,14 @@ public class SCMGameStateManager {
 
 extension SCMGameStateManager {
 
-    public func handleIncomingMessage(_ message: FBIncomingMessage) {
+    public func handleIncomingMessage(_ message: FBIncomingMessage) throws {
         
         let id = message.senderId
         guard let manager = SCMDatabaseInstance() else { return }
         
         if let message = message.text {
             guard let player = try? manager.retrievePlayer(withId: id) else {
-                makeNewGame(manager: manager, handler: handler, id: id)
+                try makeNewGame(manager: manager, handler: handler, id: id)
                 return
             }
             
@@ -46,9 +46,8 @@ extension SCMGameStateManager {
                     try? message.addButton(button: button)
                 }
                 
-                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
-                    console.log("Button Message Response: \(response?.bodyString)")
-                })
+                let response = try handler.send(message: message)
+                console.log("Button Message Response: \(response.bodyString)")
                 
             } else if let num = Int(message) {
                 
@@ -72,9 +71,9 @@ extension SCMGameStateManager {
                     try? message.addQuickReply(reply: response)
                 }
                 
-                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
-                    console.log("Button Message Response: \(response?.bodyString)")
-                })
+                let response = try handler.send(message: message)
+                console.log("Button Message Response: \(response.bodyString)")
+                
             } else if message == "buttons qr" {
                 
                 let buttons = [
@@ -106,9 +105,8 @@ extension SCMGameStateManager {
                     try? message.addQuickReply(reply: response)
                 }
                 
-                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
-                    console.log("Button Message Response: \(response?.bodyString)")
-                })
+                let response = try handler.send(message: message)
+                console.log("Button Message Response: \(response.bodyString)")
                 
             } else if message == "story" {
                 
@@ -154,9 +152,8 @@ extension SCMGameStateManager {
                 
             } else {
                 let message = FBOutgoingMessage(text: "You've already been here, please come back later.", recipientId: id)
-                handler.sendMessage(message, withResponseHandler: { (response) -> (Void) in
-                    console.log("Already been here response: \(response?.bodyString)")
-                })
+                let response = try handler.send(message: message)
+                console.log("Already been here response: \(response.bodyString)")
             }
         }
         
@@ -165,14 +162,14 @@ extension SCMGameStateManager {
                 // We got a postback, but it is unrecognized.
                 
                 let message = FBOutgoingMessage(text: "Received Postback: \(postback)", recipientId: id)
-                handler.sendMessage(message)
+                try handler.send(message: message)
                 return
             }
             
             switch recognizedPostback {
             case .getStartedButtonPressed:
                 
-                makeNewGame(manager: manager, handler: handler, id: id)
+                try makeNewGame(manager: manager, handler: handler, id: id)
                 return
             }
             
@@ -180,7 +177,7 @@ extension SCMGameStateManager {
         
     }
     
-    func makeNewGame(manager: SCMDatabaseInstance, handler: SCMMessageHandler, id: SCMIdentifier) {
+    func makeNewGame(manager: SCMDatabaseInstance, handler: SCMMessageHandler, id: SCMIdentifier) throws {
         // Create a new game
         var player = Player(id: id)
         
@@ -192,7 +189,7 @@ extension SCMGameStateManager {
         let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
         
         let message = FBOutgoingMessage(text: introductoryText, recipientId: player.id)
-        handler.sendMessage(message)
+        try handler.send(message: message)
         
         try? manager.savePlayer(player: player)
     }

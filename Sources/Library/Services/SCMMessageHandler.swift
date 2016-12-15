@@ -37,6 +37,7 @@ extension SCMMessageHandler {
     /// Handle an incoming Messenger JSON Payload and delegate the handling of resulting events asyncronously.
     /// - Parameter json: JSON payload containing all data returned by a Facebook message
     /// - Parameter callback: Closure containing all game logic.
+    @available(*, deprecated)
     public func handleAsync(json: JSON, callback: @escaping (FBIncomingMessage) throws -> Void) {
         // Run Asyncronously
         DispatchQueue(label: "Handler").async {
@@ -49,7 +50,7 @@ extension SCMMessageHandler {
     /// Handle an incoming Messenger JSON Payload and delegate the handling of resulting events.
     /// - Parameter json: JSON payload containing all data returned by a Facebook message
     /// - Parameter callback: Closure containing all game logic.
-    fileprivate func handle(json: JSON, callback: @escaping (FBIncomingMessage) throws -> Void) throws {
+    public func handle(json: JSON, callback: @escaping (FBIncomingMessage) throws -> Void) throws {
         
         // Print JSON output
         let output = try! Data(json.makeBody().bytes!).toString()
@@ -58,7 +59,7 @@ extension SCMMessageHandler {
         // Extract top-level components
         guard let type = json["object"]?.string, type == "page",
             let entries = json["entry"]?.array as? [JSON] else {
-            throw HandlerErrors.unexpectedEventFormat
+                throw Abort.custom(status: .badRequest, message: "Unexpected Message Entry")
         }
         
         // Extract all events in all messaging arrays into one JSON array
@@ -73,7 +74,7 @@ extension SCMMessageHandler {
             guard let event = FBIncomingMessage(json: data) else { continue }
             
             // User feedback
-            self.sendTypingIndicatorAsync(toUserWithIdentifier: event.senderId)
+            try self.sendTypingIndicator(toUserWithIdentifier: event.senderId)
             try callback(event)
             
         }
@@ -93,6 +94,7 @@ extension SCMMessageHandler {
     /// Send the typing indicator to Facebook user in the Messenger context.
     /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
     /// - Parameter handler: Optional handler of HTTP response
+    @available(*, deprecated)
     public func sendTypingIndicatorAsync(toUserWithIdentifier identifier: SCMIdentifier,
                                 withResponseHandler handler: ResponseBlock? = nil) {
         
@@ -107,7 +109,8 @@ extension SCMMessageHandler {
     
     /// Send the typing indicator to Facebook user in the Messenger context.
     /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    fileprivate func sendTypingIndicator(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
+    @discardableResult
+    public func sendTypingIndicator(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
         
         // JSON payload constructing typing message
         let typingData = JSON([
@@ -119,7 +122,7 @@ extension SCMMessageHandler {
         
         // Create destination URL using base and configured Facebook Access Token
         let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
-        return try sendMessage(to: url, withPayload: typingData)
+        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: typingData.makeBody())
     }
 }
 
@@ -129,12 +132,13 @@ extension SCMMessageHandler {
     /// Send JSON-encoded payload to url
     /// - Parameter url: Destination URL
     /// - Parameter payload: JSON data to be sent
+    @available(*, deprecated)
     public func sendMessage(_ message: FBOutgoingMessage, withResponseHandler handler: ResponseBlock? = nil) {
         let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
         
         // Activate sendMessage(to:withPayload:) asyncronously
         messageSendQueue.async {
-            let response = try? self.sendMessage(to: url, withPayload: message)
+            let response = try? self.send(message: message)
             
             // Give user optional response
             handler?(response)
@@ -145,12 +149,17 @@ extension SCMMessageHandler {
     /// - Parameter url: Destination URL
     /// - Parameter payload: JSON data to be sent
     @discardableResult
-    fileprivate func sendMessage(to url: String, withPayload payload: JSONRepresentable) throws -> Response {
-        let json = try payload.makeJSON()
-        
-        console.log("Message Sent with JSON: \(json.bodyString)")
-        
-        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
+    public func send(message: FBOutgoingMessage) throws -> Response {
+        do {
+            let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
+            let json = try message.makeJSON()
+            
+            console.log("Message Sent with JSON: \(json.bodyString)")
+            
+            return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
+        } catch {
+            throw Abort.badRequest
+        }
     }
     
     /// Send a group of messages to the user at a delay, where the last message is able to be read
@@ -167,11 +176,12 @@ extension SCMMessageHandler {
             let sendDelay = getMessageSendDelay(for: message)
             
             messageSendQueue.asyncAfter(deadline: executeTime, execute: {
-                do { try self.sendMessage(to: url, withPayload: message) }
+                do { try self.send(message: message) }
                 catch { console.log("We could not send a message in a group") }
                 
                 if let lastMessage = messages.last, lastMessage != message  {
-                    self.sendTypingIndicatorAsync(toUserWithIdentifier: userIdentifier)
+                    // Send failable typing indicator
+                    _ = try? self.sendTypingIndicator(toUserWithIdentifier: userIdentifier)
                 }
                 
             })
