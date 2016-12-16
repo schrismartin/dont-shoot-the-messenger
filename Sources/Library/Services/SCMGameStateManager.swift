@@ -28,13 +28,13 @@ extension SCMGameStateManager {
         let id = message.senderId
         guard let manager = SCMDatabaseInstance() else { return }
         
-        if let message = message.text {
+        if let messageText = message.text {
             guard let player = try? manager.retrievePlayer(withId: id) else {
                 try makeNewGame(manager: manager, handler: handler, id: id)
                 return
             }
             
-            if message == "Buttons" {
+            if messageText == "Buttons" {
                 let buttons = [
                     FBButton(type: .postback, title: "Button 1", payload: "Button1"),
                     FBButton(type: .postback, title: "Button 2", payload: "Button2"),
@@ -49,7 +49,7 @@ extension SCMGameStateManager {
                 let response = try handler.send(message: message)
                 console.log("Button Message Response: \(response.bodyString)")
                 
-            } else if let num = Int(message) {
+            } else if let num = Int(messageText) {
                 
                 let responses = [
                     FBQuickReply(title: "One"),
@@ -74,7 +74,7 @@ extension SCMGameStateManager {
                 let response = try handler.send(message: message)
                 console.log("Button Message Response: \(response.bodyString)")
                 
-            } else if message == "buttons qr" {
+            } else if messageText == "buttons qr" {
                 
                 let buttons = [
                     FBButton(type: .postback, title: "Button 1", payload: "Button1"),
@@ -108,7 +108,7 @@ extension SCMGameStateManager {
                 let response = try handler.send(message: message)
                 console.log("Button Message Response: \(response.bodyString)")
                 
-            } else if message == "story" {
+            } else if messageText == "story" {
                 
                 let story = ["I used to work as pizza delivery guy in Detroit for several years. I'm not going to tell you what part of the city I used to live in or the name of the pizza chain that employed me. It's not important, and besides it has absolutely no bearing on the story I'm about to tell.",
                     "The neighbourhoods I used to work in were fairly safe, but sometimes I was sent to areas that had been truly devastated by the recession. If you've ever visited Detroit, or done a Google image search on \"urban blight\", you know what I'm talking about.",
@@ -151,8 +151,8 @@ extension SCMGameStateManager {
                 handler.sendGroupedMessages(messages)
                 
             } else {
-                let message = FBOutgoingMessage(text: "You've already been here, please come back later.", recipientId: id)
-                let response = try handler.send(message: message)
+                let outgoingMessage = FBOutgoingMessage(text: "Echo: \(messageText)", recipientId: id)
+                let response = try handler.send(message: outgoingMessage)
                 console.log("Already been here response: \(response.bodyString)")
             }
         }
