@@ -36,7 +36,7 @@ public class FBOutgoingMessage {
     public var messageText: String
     public var urlType: URLType = .none
     public var url: URL?
-    public var delay: Double = 0
+    public var delay: Double = SCMConfig.sendDelay
     
     public init(text: String, recipientId: SCMIdentifier) {
         self.messageText = text

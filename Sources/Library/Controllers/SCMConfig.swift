@@ -48,15 +48,15 @@ public class SCMConfig {
         return Int(delay) ?? defaultValue
     }
     
-    public static var sendDelay: Int {
-        let defaultValue = 2
+    public static var sendDelay: Double {
+        let defaultValue: Double = 1
         
-        guard let delay = getEnvVar(name: "MESSAGE_READ_DELAY") else {
+        guard let delay = getEnvVar(name: "MESSAGE_SEND_DELAY") else {
             console.log("Environment Variable READ_TIME could not be found")
             return defaultValue
         }
         
-        return Int(delay) ?? defaultValue
+        return Double(delay) ?? defaultValue
     }
     
     public static var urlBase: String {
