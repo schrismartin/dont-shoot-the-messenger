@@ -73,18 +73,29 @@ public class FBOutgoingMessage {
 // MARK: Sending Implementation
 extension FBOutgoingMessage {
     
+    public enum MessageIndicator {
+        case typing
+        case seen
+    }
+    
     /// Send the typing indicator to Facebook user in the Messenger context.
     /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
     @discardableResult
-    public static func sendTypingIndicator(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
+    public static func sendIndicator(type: MessageIndicator, to identifier: SCMIdentifier) throws -> Response {
         
         // JSON payload constructing typing message
-        let typingData = JSON([
+        var typingData = JSON([
             "recipient" : [
                 "id": Node(identifier.string)
-            ],
-            "sender_action" : "typing_on"
-            ])
+            ]
+        ])
+        
+        switch type {
+        case .typing:
+            typingData["sender_action"] = JSON("typing_on")
+        case .seen:
+            typingData["sender_action"] = JSON("mark_seen")
+        }
         
         // Create destination URL using base and configured Facebook Access Token
         let url = SCMConfig.urlBase + SCMConfig.facebookAccessToken
@@ -97,7 +108,7 @@ extension FBOutgoingMessage {
     public func send(withResponseHandler handler: ResponseBlock? = nil) {
         
         // Attempt to send the typing indicator
-        _ = try? FBOutgoingMessage.sendTypingIndicator(toUserWithIdentifier: recipientId)
+        _ = try? FBOutgoingMessage.sendIndicator(type: .typing, to: recipientId)
         
         // Activate sendMessage(to:withPayload:) asyncronously
         let deadline = DispatchTime.now() + delay

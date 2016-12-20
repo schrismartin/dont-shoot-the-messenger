@@ -71,6 +71,7 @@ extension SCMMessageHandler {
             guard let event = FBIncomingMessage(json: data) else { continue }
             
             // User feedback
+            _ = try? FBOutgoingMessage.sendIndicator(type: .seen, to: event.recipientId)
             try callback(event)
         }
     }
