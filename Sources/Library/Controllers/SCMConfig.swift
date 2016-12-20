@@ -40,7 +40,7 @@ public class SCMConfig {
     public static var readDelay: Int {
         let defaultValue = 2
         
-        guard let delay = getEnvVar(name: "") else {
+        guard let delay = getEnvVar(name: "MESSAGE_READ_DELAY") else {
             console.log("Environment Variable READ_TIME could not be found")
             return defaultValue
         }
@@ -48,7 +48,30 @@ public class SCMConfig {
         return Int(delay) ?? defaultValue
     }
     
-    private static func getEnvVar(name: String) -> String? {
+    public static var sendDelay: Int {
+        let defaultValue = 2
+        
+        guard let delay = getEnvVar(name: "MESSAGE_READ_DELAY") else {
+            console.log("Environment Variable READ_TIME could not be found")
+            return defaultValue
+        }
+        
+        return Int(delay) ?? defaultValue
+    }
+    
+    public static var urlBase: String {
+        guard let env = getEnvVar(name: "FACEBOOK_BASE_URL") else {
+            console.log("Environment Variable FACEBOOK_BASE_URL could not be found.")
+            return "https://graph.facebook.com/v2.8/me/messages?access_token="
+        }
+        
+        return env
+    }
+}
+
+extension SCMConfig {
+
+    fileprivate static func getEnvVar(name: String) -> String? {
         let secretEnv = Droplet().config["app", name]?.string
         
         guard let env = getenv(name),
@@ -56,7 +79,8 @@ public class SCMConfig {
         return herokuEnv
     }
     
-    private static func logLoad(str: String) {
+    fileprivate static func logLoad(str: String) {
         console.log("Loaded environment variable as \(str)")
     }
+    
 }

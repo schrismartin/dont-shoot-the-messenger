@@ -14,15 +14,12 @@ import MongoKitten
 
 public class SCMMessageHandler {
     
-    // Constants
-    static let urlBase: String = "https://graph.facebook.com/v2.8/me/messages?access_token="
-    
     // Properties
     fileprivate var drop: Droplet
     fileprivate let messageSendQueue = DispatchQueue(label: "MessageSendQueue")
     
-    public init(app: Droplet) {
-        self.drop = app
+    public init(app: Droplet? = nil) {
+        self.drop = app ?? Droplet()
     }
     
     enum HandlerErrors: Error {
@@ -74,119 +71,31 @@ extension SCMMessageHandler {
             guard let event = FBIncomingMessage(json: data) else { continue }
             
             // User feedback
-            try self.sendTypingIndicator(toUserWithIdentifier: event.senderId)
             try callback(event)
-            
         }
-    }
-}
-
-// MARK: Utility Constructs
-extension SCMMessageHandler {
-    /// Closure for use with asyncronous network requests.
-    /// - Parameter response: Response from the asyncronous request. `nil` if request failed altogether.
-    public typealias ResponseBlock = (Response?) -> (Void)
-}
-
-// MARK: Show Typing
-extension SCMMessageHandler {
-    
-    /// Send the typing indicator to Facebook user in the Messenger context.
-    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    /// - Parameter handler: Optional handler of HTTP response
-    @available(*, deprecated)
-    public func sendTypingIndicatorAsync(toUserWithIdentifier identifier: SCMIdentifier,
-                                withResponseHandler handler: ResponseBlock? = nil) {
-        
-        // Activate sendTyping(toUserWithIdentifier:) asyncronously
-        messageSendQueue.async {
-            let response = try? self.sendTypingIndicator(toUserWithIdentifier: identifier)
-            
-            // Give user optional response
-            handler?(response)
-        }
-    }
-    
-    /// Send the typing indicator to Facebook user in the Messenger context.
-    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
-    @discardableResult
-    public func sendTypingIndicator(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
-        
-        // JSON payload constructing typing message
-        let typingData = JSON([
-            "recipient" : [
-                "id": Node(identifier.string)
-            ],
-            "sender_action" : "typing_on"
-            ])
-        
-        // Create destination URL using base and configured Facebook Access Token
-        let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
-        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: typingData.makeBody())
     }
 }
 
 // MARK: Message Sending Functions
 extension SCMMessageHandler {
     
-    /// Send JSON-encoded payload to url
-    /// - Parameter url: Destination URL
-    /// - Parameter payload: JSON data to be sent
-    @available(*, deprecated)
-    public func sendMessage(_ message: FBOutgoingMessage, withResponseHandler handler: ResponseBlock? = nil) {
-        let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
-        
-        // Activate sendMessage(to:withPayload:) asyncronously
-        messageSendQueue.async {
-            let response = try? self.send(message: message)
-            
-            // Give user optional response
-            handler?(response)
-        }
-    }
-    
-    /// Send JSON-encoded payload to url
-    /// - Parameter url: Destination URL
-    /// - Parameter payload: JSON data to be sent
-    @discardableResult
-    public func send(message: FBOutgoingMessage) throws -> Response {
-        do {
-            let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
-            let json = try message.makeJSON()
-            
-            console.log("Message Sent with JSON: \(json.bodyString)")
-            
-            return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
-        } catch {
-            throw Abort.badRequest
-        }
-    }
-    
     /// Send a group of messages to the user at a delay, where the last message is able to be read
     /// by the time the next one sends
     /// - Parameter messages: Array of messages to be sent
     public func sendGroupedMessages(_ messages: [FBOutgoingMessage]) {
-        guard let userIdentifier = messages.first?.recipientId else { return }
-        sendTypingIndicatorAsync(toUserWithIdentifier: userIdentifier)
         
-        let url = SCMMessageHandler.urlBase + SCMConfig.facebookAccessToken
-        var executeTime: DispatchTime = .now()
+        // Send with delays
+        var sendDelay: Double = 0
         
         for message in messages {
-            let sendDelay = getMessageSendDelay(for: message)
             
-            messageSendQueue.asyncAfter(deadline: executeTime, execute: {
-                do { try self.send(message: message) }
-                catch { console.log("We could not send a message in a group") }
-                
-                if let lastMessage = messages.last, lastMessage != message  {
-                    // Send failable typing indicator
-                    _ = try? self.sendTypingIndicator(toUserWithIdentifier: userIdentifier)
-                }
-                
+            // Apply delay and send messages
+            message.delay = sendDelay
+            message.send(withResponseHandler: { (response) -> (Void) in
+                print(response ?? "No response was received from message sent in grouped message")
             })
             
-            executeTime = executeTime + sendDelay + 2
+            sendDelay += getMessageSendDelay(for: message) + 2
             
         }
     }
@@ -208,15 +117,3 @@ extension SCMMessageHandler {
     }
     
 }
-
-
-
-
-
-
-
-
-
-
-
-

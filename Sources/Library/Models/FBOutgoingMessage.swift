@@ -13,6 +13,8 @@ import HTTP
 
 public class FBOutgoingMessage {
     
+    static let drop = Droplet()
+    
     public enum URLType {
         case none
         case image
@@ -34,6 +36,7 @@ public class FBOutgoingMessage {
     public var messageText: String
     public var urlType: URLType = .none
     public var url: URL?
+    public var delay: Double = 0
     
     public init(text: String, recipientId: SCMIdentifier) {
         self.messageText = text
@@ -66,6 +69,64 @@ public class FBOutgoingMessage {
 
 }
 
+// MARK: Sending Implementation
+extension FBOutgoingMessage {
+    
+    /// Send the typing indicator to Facebook user in the Messenger context.
+    /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
+    @discardableResult
+    public static func sendTypingIndicator(toUserWithIdentifier identifier: SCMIdentifier) throws -> Response {
+        
+        // JSON payload constructing typing message
+        let typingData = JSON([
+            "recipient" : [
+                "id": Node(identifier.string)
+            ],
+            "sender_action" : "typing_on"
+            ])
+        
+        // Create destination URL using base and configured Facebook Access Token
+        let url = SCMConfig.urlBase + SCMConfig.facebookAccessToken
+        return try FBOutgoingMessage.drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: typingData.makeBody())
+    }
+    
+    /// Send JSON-encoded payload to url
+    /// - Parameter url: Destination URL
+    /// - Parameter payload: JSON data to be sent
+    public func send(withResponseHandler handler: ResponseBlock? = nil) {
+        
+        // Attempt to send the typing indicator
+        _ = try? FBOutgoingMessage.sendTypingIndicator(toUserWithIdentifier: recipientId)
+        
+        // Activate sendMessage(to:withPayload:) asyncronously
+        let deadline = DispatchTime.now() + delay
+        DispatchQueue.global().asyncAfter(deadline: deadline, execute: {
+            let response = try? self.sendMessage()
+            
+            // Give user optional response
+            handler?(response)
+        })
+    }
+    
+    /// Send JSON-encoded payload to url
+    /// - Parameter url: Destination URL
+    /// - Parameter payload: JSON data to be sent
+    @discardableResult
+    private func sendMessage() throws -> Response {
+        do {
+            let url = SCMConfig.urlBase + SCMConfig.facebookAccessToken
+            let json = try makeJSON()
+            
+            console.log("Message Sent with JSON: \(json.bodyString)")
+            
+            return try FBOutgoingMessage.drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
+        } catch {
+            throw Abort.badRequest
+        }
+    }
+}
+
+// MARK: Hashable, Equatable Conformance
 extension FBOutgoingMessage: Hashable, Equatable {
     
     public var hashValue: Int {
@@ -79,6 +140,7 @@ extension FBOutgoingMessage: Hashable, Equatable {
     
 }
 
+// MARK: JSON Representations
 extension FBOutgoingMessage: JSONRepresentable, NodeRepresentable {
     
     public func makeNode(context: Context) throws -> Node {

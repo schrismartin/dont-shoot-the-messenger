@@ -44,3 +44,7 @@ extension JSON {
         return try? data.toString()
     }
 }
+
+/// Closure for use with asyncronous network requests.
+/// - Parameter response: Response from the asyncronous request. `nil` if request failed altogether.
+public typealias ResponseBlock = (Response?) -> (Void)
