@@ -6,6 +6,10 @@ import Foundation
 
 let drop = Droplet()
 
+drop.get("/") { request in
+    return "You've reached the homepage for \"The Narrator\"."
+}
+
 drop.get("/fbwebhook") { request in
     console.log("get webhook")
     guard let token = request.data["hub.verify_token"]?.string else {
