@@ -1,6 +1,6 @@
 //
 //  Protocols.swift
-//  dont-shoot-the-messenger
+//  the-narrator
 //
 //  Created by Chris Martin on 11/18/16.
 //
@@ -30,21 +30,3 @@ public class console {
         fflush(stdout)
     }
 }
-
-extension Response {
-    public var bodyString: String? {
-        let data = Data(body.bytes!)
-        return try? data.toString()
-    }
-}
-
-extension JSON {
-    public var bodyString: String? {
-        let data = Data(makeBody().bytes!)
-        return try? data.toString()
-    }
-}
-
-/// Closure for use with asyncronous network requests.
-/// - Parameter response: Response from the asyncronous request. `nil` if request failed altogether.
-public typealias ResponseBlock = (Response?) -> (Void)

@@ -1,3 +1,11 @@
+//
+//  main.swift
+//  the-narrator
+//
+//  Created by Chris Martin on 11/21/16.
+//
+//
+
 import Vapor
 import Library
 import MongoKitten
@@ -19,7 +27,7 @@ drop.get("/fbwebhook") { request in
         throw Abort.badRequest
     }
     
-    if token == "2318934571" {
+    if token == SCMConfig.facebookWebhookKey {
         console.log("send response")
         
         return res

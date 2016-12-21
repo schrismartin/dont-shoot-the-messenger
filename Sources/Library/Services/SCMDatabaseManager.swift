@@ -1,6 +1,6 @@
 //
 //  SCMGameManager.swift
-//  dont-shoot-the-messenger
+//  the-narrator
 //
 //  Created by Chris Martin on 11/13/16.
 //
@@ -22,7 +22,7 @@ public class SCMDatabaseInstance {
             let hostname = SCMConfig.mongoURI
             let mongoServer = try Server(mongoURL: hostname, automatically: true)
             
-            self.database = mongoServer["dont-shoot-the-messenger"]
+            self.database = mongoServer["the-narrator"]
         } catch {
             console.log("Could not connect to server. Exiting")
             return nil

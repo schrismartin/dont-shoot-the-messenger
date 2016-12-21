@@ -1,6 +1,6 @@
 //
 //  ConfigService.swift
-//  dont-shoot-the-messenger
+//  the-narrator
 //
 //  Created by Chris Martin on 11/17/16.
 //
@@ -18,6 +18,11 @@ import Foundation
 #endif
 
 public class SCMConfig {
+    
+    enum Source {
+        case secret
+        case other
+    }
 
     public static var facebookAccessToken: String {
         guard let env = getEnvVar(name: "FACEBOOK_ACCESS_TOKEN")  else {
@@ -51,8 +56,8 @@ public class SCMConfig {
     public static var sendDelay: Double {
         let defaultValue: Double = 1
         
-        guard let delay = getEnvVar(name: "MESSAGE_SEND_DELAY") else {
-            console.log("Environment Variable READ_TIME could not be found")
+        guard let delay = getEnvVar(name: "DEFAULT_MESSAGE_SEND_DELAY") else {
+            console.log("Environment Variable DEFAULT_MESSAGE_SEND_DELAY could not be found")
             return defaultValue
         }
         
@@ -67,6 +72,15 @@ public class SCMConfig {
         
         return env
     }
+    
+    public static var facebookWebhookKey: String {
+        guard let env = getEnvVar(name: "FACEBOOK_WEBHOOK_KEY") else {
+            console.log("Environment Variable FACEBOOK_BASE_URL could not be found.")
+            return String.empty
+        }
+        
+        return env
+    }
 }
 
 extension SCMConfig {
@@ -74,8 +88,10 @@ extension SCMConfig {
     fileprivate static func getEnvVar(name: String) -> String? {
         let secretEnv = Droplet().config["app", name]?.string
         
-        guard let env = getenv(name),
-            let herokuEnv = String.init(validatingUTF8: env) else { return secretEnv }
+        guard let env = getenv(name), let herokuEnv = String.init(validatingUTF8: env) else {
+            return secretEnv
+        }
+        
         return herokuEnv
     }
     
