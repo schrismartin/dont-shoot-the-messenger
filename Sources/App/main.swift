@@ -20,6 +20,7 @@ drop.get("/") { request in
 
 drop.get("/fbwebhook") { request in
     console.log("get webhook")
+
     guard let token = request.data["hub.verify_token"]?.string else {
         throw Abort.badRequest
     }

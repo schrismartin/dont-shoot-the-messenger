@@ -2,6 +2,7 @@ import PackageDescription
 
 let package = Package(
     name: "the-narrator",
+
     targets: [
         Target(name: "App", dependencies: ["Library"]),
     ],

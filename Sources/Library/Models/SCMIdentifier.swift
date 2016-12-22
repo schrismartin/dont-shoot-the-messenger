@@ -13,7 +13,6 @@ import HTTP
 
 public struct SCMIdentifier {
     public var string: String
-    
     public var objectId: ObjectId? {
         let hexRepresentation = string.hashValue.hex
         
