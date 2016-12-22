@@ -42,6 +42,15 @@ public class SCMConfig {
         return env
     }
     
+    public static var mongoName: String {
+        guard let env = getEnvVar(name: "MONGO_DB_NAME") else {
+            console.log("Environment Variable MONGO_DB_NAME could not be found.")
+            return ""
+        }
+        
+        return env
+    }
+    
     public static var readDelay: Int {
         let defaultValue = 2
         

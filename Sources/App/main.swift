@@ -36,7 +36,7 @@ drop.get("/fbwebhook") { request in
     }
 }
 
-drop.post("fbwebhook") { request in
+drop.post("/fbwebhook") { request in
     
     guard let data = request.body.bytes else {
         // There was no real data
@@ -52,7 +52,14 @@ drop.post("fbwebhook") { request in
         
         try handler.handle(json: json, callback: { (message) in
             let gameManager = SCMGameStateManager()
-            try gameManager.handleIncomingMessage(message)
+            
+            do { try gameManager.handleIncomingMessage(message) }
+            catch {
+                // Notify user of error
+                let recipient = message.recipientId
+                let response = try? FBOutgoingMessage.notify(user: recipient, of: error)
+                console.log("Response for user error message: \(response)")
+            }
         })
         
     } catch let error {
@@ -61,7 +68,7 @@ drop.post("fbwebhook") { request in
     }
 
     console.log("Request returning successfully")
-    return Response(status: .ok)
+    return Response(status: .ok, body: "Message Received\n")
 }
 
 // Do some other stuff

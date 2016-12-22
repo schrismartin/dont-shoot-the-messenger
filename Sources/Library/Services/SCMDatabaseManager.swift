@@ -22,7 +22,7 @@ public class SCMDatabaseInstance {
             let hostname = SCMConfig.mongoURI
             let mongoServer = try Server(mongoURL: hostname, automatically: true)
             
-            self.database = mongoServer["the-narrator"]
+            self.database = mongoServer[SCMConfig.mongoName]
         } catch {
             console.log("Could not connect to server. Exiting")
             return nil

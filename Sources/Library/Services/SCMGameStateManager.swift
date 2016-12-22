@@ -18,7 +18,7 @@ public class SCMGameStateManager {
     public func handleIncomingMessage(_ message: FBIncomingMessage) throws {
         
         let id = message.senderId
-        guard let manager = SCMDatabaseInstance() else { return }
+        guard let manager = SCMDatabaseInstance() else { return } // TODO: Make this unfailable
         
         if let messageText = message.text {
             guard let player = try? manager.retrievePlayer(withId: id) else {
@@ -38,7 +38,7 @@ public class SCMGameStateManager {
                     try? message.addButton(button: button)
                 }
                 
-                message.send(withResponseHandler: { (response) -> (Void) in
+                message.send(handler: { (response) -> (Void) in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
@@ -64,7 +64,7 @@ public class SCMGameStateManager {
                     try? message.addQuickReply(reply: response)
                 }
                 
-                message.send(withResponseHandler: { (response) -> (Void) in
+                message.send(handler: { (response) -> (Void) in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
@@ -99,7 +99,7 @@ public class SCMGameStateManager {
                     try? message.addQuickReply(reply: response)
                 }
                 
-                message.send(withResponseHandler: { (response) -> (Void) in
+                message.send(handler: { (response) -> (Void) in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
@@ -148,9 +148,10 @@ public class SCMGameStateManager {
                 
             } else {
                 let outgoingMessage = FBOutgoingMessage(text: "Echo: \(messageText)", recipientId: id)
+                console.log("\(try? outgoingMessage.makeJSON())")
                 
-                outgoingMessage.send(withResponseHandler: { (response) -> (Void) in
-                    console.log("Already been here response: \(response?.bodyString)")
+                outgoingMessage.send(handler: { (response) -> (Void) in
+                    console.log("Response: \(response?.bodyString)")
                 })
             }
         }
@@ -161,15 +162,24 @@ public class SCMGameStateManager {
                 
                 let message = FBOutgoingMessage(text: "Received Postback: \(postback)", recipientId: id)
                 
-                message.send()
+                message.send(handler: { (response) -> (Void) in
+                    print("Postback Sent")
+                })
                 return
             }
             
             switch recognizedPostback {
             case .getStartedButtonPressed:
-                
+                do {
                 try makeNewGame(manager: manager, id: id)
                 return
+                } catch let error {
+                    
+                    let message = FBOutgoingMessage(text: "Received Error: \(error.localizedDescription). Please report this on our page!", recipientId: id)
+                    message.send(handler: { (response) -> (Void) in
+                        console.log("Error message sent with response: \(response)")
+                    })
+                }
             }
             
         }
@@ -181,14 +191,16 @@ public class SCMGameStateManager {
         var player = Player(id: id)
         
         // Create initial location
-        guard let initialLocation = buildAreas(using: manager) else { return }
+        guard let initialLocation = try buildAreas(using: manager) else { return }
         
         player.currentArea = initialLocation.id
         
         let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
         
         let message = FBOutgoingMessage(text: introductoryText, recipientId: player.id)
-        message.send()
+        message.send { (response) -> (Void) in
+            console.log("New Game Created, Response Received: \(response)")
+        }
         
         try? manager.savePlayer(player: player)
     }
@@ -201,7 +213,7 @@ public class SCMGameStateManager {
 
 extension SCMGameStateManager {
     
-    func buildAreas(using manager: SCMDatabaseInstance) -> Area? {
+    func buildAreas(using manager: SCMDatabaseInstance) throws -> Area? {
         //Create all area objects
         let forest = Area()
         let cave = Area()
@@ -304,17 +316,14 @@ extension SCMGameStateManager {
         //spiritTree
         
         // Save Areas
-        do {
-            try manager.saveArea(area: forest)
-            try manager.saveArea(area: building)
-            try manager.saveArea(area: riddleRoom)
-            try manager.saveArea(area: cave)
-            try manager.saveArea(area: cellar)
-            try manager.saveArea(area: spiritTree)
-            return forest
-        } catch {
-            return nil
-        }
+        try manager.saveArea(area: forest)
+        try manager.saveArea(area: building)
+        try manager.saveArea(area: riddleRoom)
+        try manager.saveArea(area: cave)
+        try manager.saveArea(area: cellar)
+        try manager.saveArea(area: spiritTree)
+        
+        return forest
     }
     
 }

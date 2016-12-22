@@ -102,16 +102,23 @@ extension FBOutgoingMessage {
         return try FBOutgoingMessage.drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: typingData.makeBody())
     }
     
+    @discardableResult
+    public static func notify(user recipientId: SCMIdentifier, of error: Error) throws -> Response? {
+        let message = FBOutgoingMessage(text: "We've encountered an error: \(error). Please post about this on our Facebook page! In the meantime, you can hang tight and we'll try to fix it, or you can restart the game.", recipientId: recipientId)
+        return try message.sendMessage()
+    }
+    
     /// Send JSON-encoded payload to url
     /// - Parameter url: Destination URL
     /// - Parameter payload: JSON data to be sent
-    public func send(withResponseHandler handler: ResponseBlock? = nil) {
+    public func send(handler: ResponseBlock? = nil) {
         
-        // Attempt to send the typing indicator
+        // Attempt to send the failable typing indicator
         _ = try? FBOutgoingMessage.sendIndicator(type: .typing, to: recipientId)
         
         // Activate sendMessage(to:withPayload:) asyncronously
         let deadline = DispatchTime.now() + delay
+        console.log("Deadline is \(deadline)")
         DispatchQueue.global().asyncAfter(deadline: deadline, execute: {
             let response = try? self.sendMessage()
             

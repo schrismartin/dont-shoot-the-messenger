@@ -51,7 +51,7 @@ extension SCMMessageHandler {
         
         // Print JSON output
         let output = try! Data(json.makeBody().bytes!).toString()
-        console.log(output)
+//        console.log(output)
         
         // Extract top-level components
         guard let type = json["object"]?.string, type == "page",
@@ -92,7 +92,7 @@ extension SCMMessageHandler {
             
             // Apply delay and send messages
             message.delay = sendDelay
-            message.send(withResponseHandler: { (response) -> (Void) in
+            message.send(handler: { (response) -> (Void) in
                 print(response ?? "No response was received from message sent in grouped message")
             })
             
