@@ -1,6 +1,6 @@
 //
 //  SCMGameManager.swift
-//  dont-shoot-the-messenger
+//  the-narrator
 //
 //  Created by Chris Martin on 11/18/16.
 //
@@ -13,28 +13,20 @@ import Foundation
 
 public class SCMGameStateManager {
     
-    var handler: SCMMessageHandler
-    
-    public init(messageHandler: SCMMessageHandler) {
-        handler = messageHandler
-    }
-    
-}
+    public init() { }
 
-extension SCMGameStateManager {
-
-    public func handleIncomingMessage(_ message: FBIncomingMessage) {
+    public func handleIncomingMessage(_ message: FBIncomingMessage) throws {
         
         let id = message.senderId
-        guard let manager = SCMDatabaseInstance() else { return }
+        guard let manager = SCMDatabaseInstance() else { return } // TODO: Make this unfailable
         
-        if let message = message.text {
+        if let messageText = message.text {
             guard let player = try? manager.retrievePlayer(withId: id) else {
-                makeNewGame(manager: manager, handler: handler, id: id)
+                try makeNewGame(manager: manager, id: id)
                 return
             }
             
-            if message == "Buttons" {
+            if messageText == "Buttons" {
                 let buttons = [
                     FBButton(type: .postback, title: "Button 1", payload: "Button1"),
                     FBButton(type: .postback, title: "Button 2", payload: "Button2"),
@@ -46,11 +38,11 @@ extension SCMGameStateManager {
                     try? message.addButton(button: button)
                 }
                 
-                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
+                message.send(handler: { (response) -> (Void) in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
-            } else if let num = Int(message) {
+            } else if let num = Int(messageText) {
                 
                 let responses = [
                     FBQuickReply(title: "One"),
@@ -72,10 +64,11 @@ extension SCMGameStateManager {
                     try? message.addQuickReply(reply: response)
                 }
                 
-                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
+                message.send(handler: { (response) -> (Void) in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
-            } else if message == "buttons qr" {
+                
+            } else if messageText == "buttons qr" {
                 
                 let buttons = [
                     FBButton(type: .postback, title: "Button 1", payload: "Button1"),
@@ -106,11 +99,11 @@ extension SCMGameStateManager {
                     try? message.addQuickReply(reply: response)
                 }
                 
-                handler.sendMessage(message, withResponseHandler: { (response: Response?) -> Void in
+                message.send(handler: { (response) -> (Void) in
                     console.log("Button Message Response: \(response?.bodyString)")
                 })
                 
-            } else if message == "story" {
+            } else if messageText == "story" {
                 
                 let story = ["I used to work as pizza delivery guy in Detroit for several years. I'm not going to tell you what part of the city I used to live in or the name of the pizza chain that employed me. It's not important, and besides it has absolutely no bearing on the story I'm about to tell.",
                     "The neighbourhoods I used to work in were fairly safe, but sometimes I was sent to areas that had been truly devastated by the recession. If you've ever visited Detroit, or done a Google image search on \"urban blight\", you know what I'm talking about.",
@@ -150,12 +143,15 @@ extension SCMGameStateManager {
                 
                 let messages = story.map { FBOutgoingMessage(text: $0, recipientId: id) }
                 
+                let handler = SCMMessageHandler()
                 handler.sendGroupedMessages(messages)
                 
             } else {
-                let message = FBOutgoingMessage(text: "You've already been here, please come back later.", recipientId: id)
-                handler.sendMessage(message, withResponseHandler: { (response) -> (Void) in
-                    console.log("Already been here response: \(response?.bodyString)")
+                let outgoingMessage = FBOutgoingMessage(text: "Echo: \(messageText)", recipientId: id)
+                console.log("\(try? outgoingMessage.makeJSON())")
+                
+                outgoingMessage.send(handler: { (response) -> (Void) in
+                    console.log("Response: \(response?.bodyString)")
                 })
             }
         }
@@ -165,34 +161,46 @@ extension SCMGameStateManager {
                 // We got a postback, but it is unrecognized.
                 
                 let message = FBOutgoingMessage(text: "Received Postback: \(postback)", recipientId: id)
-                handler.sendMessage(message)
+                
+                message.send(handler: { (response) -> (Void) in
+                    print("Postback Sent")
+                })
                 return
             }
             
             switch recognizedPostback {
             case .getStartedButtonPressed:
-                
-                makeNewGame(manager: manager, handler: handler, id: id)
+                do {
+                try makeNewGame(manager: manager, id: id)
                 return
+                } catch let error {
+                    
+                    let message = FBOutgoingMessage(text: "Received Error: \(error.localizedDescription). Please report this on our page!", recipientId: id)
+                    message.send(handler: { (response) -> (Void) in
+                        console.log("Error message sent with response: \(response)")
+                    })
+                }
             }
             
         }
         
     }
     
-    func makeNewGame(manager: SCMDatabaseInstance, handler: SCMMessageHandler, id: SCMIdentifier) {
+    func makeNewGame(manager: SCMDatabaseInstance, id: SCMIdentifier) throws {
         // Create a new game
         var player = Player(id: id)
         
         // Create initial location
-        guard let initialLocation = buildAreas(using: manager) else { return }
+        guard let initialLocation = try buildAreas(using: manager) else { return }
         
         player.currentArea = initialLocation.id
         
         let introductoryText = "You wake up in a forest. You know not who you are, where you're going, nor where you've been."
         
         let message = FBOutgoingMessage(text: introductoryText, recipientId: player.id)
-        handler.sendMessage(message)
+        message.send { (response) -> (Void) in
+            console.log("New Game Created, Response Received: \(response)")
+        }
         
         try? manager.savePlayer(player: player)
     }
@@ -205,7 +213,7 @@ extension SCMGameStateManager {
 
 extension SCMGameStateManager {
     
-    func buildAreas(using manager: SCMDatabaseInstance) -> Area? {
+    func buildAreas(using manager: SCMDatabaseInstance) throws -> Area? {
         //Create all area objects
         let forest = Area()
         let cave = Area()
@@ -308,17 +316,14 @@ extension SCMGameStateManager {
         //spiritTree
         
         // Save Areas
-        do {
-            try manager.saveArea(area: forest)
-            try manager.saveArea(area: building)
-            try manager.saveArea(area: riddleRoom)
-            try manager.saveArea(area: cave)
-            try manager.saveArea(area: cellar)
-            try manager.saveArea(area: spiritTree)
-            return forest
-        } catch {
-            return nil
-        }
+        try manager.saveArea(area: forest)
+        try manager.saveArea(area: building)
+        try manager.saveArea(area: riddleRoom)
+        try manager.saveArea(area: cave)
+        try manager.saveArea(area: cellar)
+        try manager.saveArea(area: spiritTree)
+        
+        return forest
     }
     
 }

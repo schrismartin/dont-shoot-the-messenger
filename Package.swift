@@ -1,7 +1,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "dont-shoot-the-messenger",
+    name: "the-narrator",
     targets: [
         Target(name: "App", dependencies: ["Library"]),
     ],

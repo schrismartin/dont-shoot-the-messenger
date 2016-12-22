@@ -1,3 +1,11 @@
+//
+//  main.swift
+//  the-narrator
+//
+//  Created by Chris Martin on 11/21/16.
+//
+//
+
 import Vapor
 import Library
 import MongoKitten
@@ -5,6 +13,10 @@ import HTTP
 import Foundation
 
 let drop = Droplet()
+
+drop.get("/") { request in
+    return "You've reached the homepage for \"The Narrator\"."
+}
 
 drop.get("/fbwebhook") { request in
     console.log("get webhook")
@@ -15,7 +27,7 @@ drop.get("/fbwebhook") { request in
         throw Abort.badRequest
     }
     
-    if token == "2318934571" {
+    if token == SCMConfig.facebookWebhookKey {
         console.log("send response")
         
         return res
@@ -24,7 +36,7 @@ drop.get("/fbwebhook") { request in
     }
 }
 
-drop.post("fbwebhook") { request in
+drop.post("/fbwebhook") { request in
     
     guard let data = request.body.bytes else {
         // There was no real data
@@ -37,21 +49,26 @@ drop.post("fbwebhook") { request in
         let json = try JSON(bytes: data)
     
         let handler = SCMMessageHandler(app: drop)
-        handler.handleAsync(json: json, callback: { (message) in
+        
+        try handler.handle(json: json, callback: { (message) in
+            let gameManager = SCMGameStateManager()
             
-            let gameManager = SCMGameStateManager(messageHandler: handler)
-            gameManager.handleIncomingMessage(message)
-            
+            do { try gameManager.handleIncomingMessage(message) }
+            catch {
+                // Notify user of error
+                let recipient = message.recipientId
+                let response = try? FBOutgoingMessage.notify(user: recipient, of: error)
+                console.log("Response for user error message: \(response)")
+            }
         })
         
     } catch let error {
         console.log("There was an issue handling the request: \(try? data.toString()) - Error: \(error)")
-        return Response(status: .badRequest , body: "Data could not be determined")
+        throw error
     }
-    
 
     console.log("Request returning successfully")
-    return Response(status: .ok)
+    return Response(status: .ok, body: "Message Received\n")
 }
 
 // Do some other stuff
