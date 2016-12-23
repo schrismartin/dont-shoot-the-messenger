@@ -50,8 +50,9 @@ extension SCMMessageHandler {
     public func handle(json: JSON, callback: @escaping (FBIncomingMessage) throws -> Void) throws {
         
         // Print JSON output
-        let output = try! Data(json.makeBody().bytes!).toString()
-//        console.log(output)
+        if let output = try? Data(json.makeBody().bytes!).toString() {
+            console.log(output)
+        }
         
         // Extract top-level components
         guard let type = json["object"]?.string, type == "page",

@@ -11,7 +11,7 @@ import MongoKitten
 import Vapor
 import HTTP
 
-public struct FBQuickReply {
+public struct FBQuickReply: FBMessageAttachment {
     
     public var title: String
     public var imageUrl: URL?

@@ -14,29 +14,21 @@ import HTTP
 
 public class FBOutgoingMessage {
     
-    static let drop = Droplet()
+    fileprivate static let drop = Droplet()
+    public static let maxButtons = 3
+    public static let maxQuickReplies = 11
     
-    public enum URLType {
-        case none
-        case image
-        case video
-        case audio
-        case file
-    }
-    
-    public enum FBOutgoingMessageError: Error {
+    public enum MessageError: Error {
         case noMessage
         case notImplemented
         case tooManyButtons
         case tooManyQuickReplies
     }
     
-    fileprivate var buttons: [FBButton] = []
-    fileprivate var quickReplies: [FBQuickReply] = []
+    fileprivate var buttons = FixedCapacityArray<FBButton>(capacity: FBOutgoingMessage.maxButtons)
+    fileprivate var quickReplies = FixedCapacityArray<FBQuickReply>(capacity: FBOutgoingMessage.maxQuickReplies)
     public var recipientId: SCMIdentifier
     public var messageText: String
-    public var urlType: URLType = .none
-    public var url: URL?
     public var delay: Double = SCMConfig.sendDelay
     
     public init(text: String, recipientId: SCMIdentifier) {
@@ -44,28 +36,18 @@ public class FBOutgoingMessage {
         self.recipientId = recipientId
     }
     
-    public func addButton(button: FBButton) throws {
-        
-        // Prevent addition of more than 3 buttons
-        guard buttons.count < 3 else {
-            throw FBOutgoingMessageError.tooManyButtons
+    public func addAttachment(attachment: FBMessageAttachment) throws {
+        if let button = attachment as? FBButton {
+            try buttons.append(button)
         }
-        
-        buttons.append(button)
+
+        if let quickReply = attachment as? FBQuickReply {
+            try quickReplies.append(quickReply)
+        }
     }
     
     public func clearButtons() {
         buttons.removeAll()
-    }
-    
-    public func addQuickReply(reply: FBQuickReply) throws {
-        
-        // Prevent addition of more than 11 quick replies
-        guard quickReplies.count < 11 else {
-            throw FBOutgoingMessageError.tooManyQuickReplies
-        }
-        
-        quickReplies.append(reply)
     }
 
 }
@@ -78,28 +60,30 @@ extension FBOutgoingMessage {
         case seen
     }
     
+    /// Send off the attached json payload.
+    /// - Parameter json: Payload to be sent
+    private static func send(json: JSON) throws -> Response {
+        let url = SCMConfig.urlBase + SCMConfig.facebookAccessToken
+        return try drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
+    }
+    
     /// Send the typing indicator to Facebook user in the Messenger context.
     /// - Parameter identifier: Unique identifier constructed with the user's Facebook id
     @discardableResult
     public static func sendIndicator(type: MessageIndicator, to identifier: SCMIdentifier) throws -> Response {
         
         // JSON payload constructing typing message
-        var typingData = JSON([
-            "recipient" : [
-                "id": Node(identifier.string)
-            ]
-        ])
+        var typingData = FBOutgoingMessage.messageBase(recipientId: identifier)
         
         switch type {
         case .typing:
-            typingData["sender_action"] = JSON("typing_on")
+            typingData["sender_action"] = Node("typing_on")
         case .seen:
-            typingData["sender_action"] = JSON("mark_seen")
+            typingData["sender_action"] = Node("mark_seen")
         }
         
-        // Create destination URL using base and configured Facebook Access Token
-        let url = SCMConfig.urlBase + SCMConfig.facebookAccessToken
-        return try FBOutgoingMessage.drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: typingData.makeBody())
+        let json = JSON(Node(typingData))
+        return try FBOutgoingMessage.send(json: json)
     }
     
     @discardableResult
@@ -108,17 +92,15 @@ extension FBOutgoingMessage {
         return try message.sendMessage()
     }
     
-    /// Send JSON-encoded payload to url
-    /// - Parameter url: Destination URL
-    /// - Parameter payload: JSON data to be sent
+    /// Send the message to the messenger endpoint
+    /// - Parameter handler: Optional closure handling the response message
     public func send(handler: ResponseBlock? = nil) {
         
         // Attempt to send the failable typing indicator
         _ = try? FBOutgoingMessage.sendIndicator(type: .typing, to: recipientId)
         
-        // Activate sendMessage(to:withPayload:) asyncronously
+        // Activate sendMessage() after time interval
         let deadline = DispatchTime.now() + delay
-        console.log("Deadline is \(deadline)")
         DispatchQueue.global().asyncAfter(deadline: deadline, execute: {
             let response = try? self.sendMessage()
             
@@ -127,18 +109,15 @@ extension FBOutgoingMessage {
         })
     }
     
-    /// Send JSON-encoded payload to url
-    /// - Parameter url: Destination URL
-    /// - Parameter payload: JSON data to be sent
+    /// Send the message to the messenger endpoint
     @discardableResult
     private func sendMessage() throws -> Response {
         do {
-            let url = SCMConfig.urlBase + SCMConfig.facebookAccessToken
             let json = try makeJSON()
             
             console.log("Message Sent with JSON: \(json.bodyString)")
             
-            return try FBOutgoingMessage.drop.client.post(url, headers: ["Content-Type": "application/json"], query: [:], body: json.makeBody())
+            return try FBOutgoingMessage.send(json: json)
         } catch {
             throw Abort.badRequest
         }
@@ -167,53 +146,46 @@ extension FBOutgoingMessage: JSONRepresentable, NodeRepresentable {
         // Construct Base
         var base: [String: Node]
         
-        // Determine base JSON payload
-        switch urlType {
-        case .none:
-            
-            if buttons.count != 0 {
-                base = makeMessage(withAttachment: buttonAttachment)
-            } else {
-                base = plainMessage
-            }
-            
-        default:
-            throw FBOutgoingMessageError.notImplemented
-        }
+        // Make plain message or with buttons
+        base = buttons.isEmpty
+            ? makePlainMessage()
+            : makeMessage(withAttachment: buttonAttachment)
         
         // Add optional quick replies
         if !quickReplies.isEmpty {
-            let quickReplies = self.quickReplies.flatMap { try? $0.makeNode() }
+            let quickReplies = self.quickReplies.items.flatMap { try? $0.makeNode() }
             base["message"]?["quick_replies"] = Node(quickReplies)
         }
         
         return Node(base)
     }
     
-    private func makeMessage(withAttachment attachment: [String: Node]) -> [String: Node] {
+    fileprivate static func messageBase(recipientId: SCMIdentifier) -> [String: Node] {
         return [
             "recipient" : [
                 "id": Node(recipientId.string)
-            ],
-            "message": [
-                "attachment" : Node(attachment)
             ]
         ]
     }
     
-    private var plainMessage: [String: Node] {
-        return [
-            "recipient" : [
-                "id": Node(recipientId.string)
-            ],
-            "message" : [
-                "text" : Node(messageText)
-            ]
+    private func makePlainMessage() -> [String: Node] {
+        var message = FBOutgoingMessage.messageBase(recipientId: recipientId)
+        message["message"] = [
+            "text" : Node(messageText)
         ]
+        return message
+    }
+    
+    private func makeMessage(withAttachment attachment: [String: Node]) -> [String: Node] {
+        var message = FBOutgoingMessage.messageBase(recipientId: recipientId)
+        message["message"] =  [
+            "attachment" : Node(attachment)
+        ]
+        return message
     }
     
     private var buttonAttachment: [String: Node] {
-        let buttonsNode = buttons.flatMap { try? $0.makeNode() }
+        let buttonsNode = buttons.items.flatMap { try? $0.makeNode() }
         
         return [
             "type": "template",

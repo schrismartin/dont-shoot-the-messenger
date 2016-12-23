@@ -11,7 +11,7 @@ import MongoKitten
 import Vapor
 import HTTP
 
-public struct FBButton {
+public struct FBButton: FBMessageAttachment {
     
     public enum ButtonType: String {
         case url = "web_url"

@@ -24,6 +24,11 @@ public protocol DatabaseRepresentable {
     
 }
 
+public protocol FBMessageAttachment: JSONRepresentable, NodeRepresentable {
+    var title: String { get set }
+    var payload: String { get set }
+}
+
 public class console {
     public static func log(_ string: String) {
         fputs("\(string)\n", stdout)

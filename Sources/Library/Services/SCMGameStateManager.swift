@@ -35,7 +35,7 @@ public class SCMGameStateManager {
                 
                 let message = FBOutgoingMessage(text: "This message has buttons!", recipientId: id)
                 for button in buttons {
-                    try? message.addButton(button: button)
+                    try? message.addAttachment(attachment: button)
                 }
                 
                 message.send(handler: { (response) -> (Void) in
@@ -61,7 +61,7 @@ public class SCMGameStateManager {
                 let message = FBOutgoingMessage(text: "This message has quick responses!", recipientId: id)
                 
                 for (index, response) in responses.enumerated() where index < num {
-                    try? message.addQuickReply(reply: response)
+                    try? message.addAttachment(attachment: response)
                 }
                 
                 message.send(handler: { (response) -> (Void) in
@@ -71,9 +71,9 @@ public class SCMGameStateManager {
             } else if messageText == "buttons qr" {
                 
                 let buttons = [
-                    FBButton(type: .postback, title: "Button 1", payload: "Button1"),
-                    FBButton(type: .postback, title: "Button 2", payload: "Button2"),
-                    FBButton(type: .postback, title: "Button 3", payload: "Button3")
+                    FBButton(type: .postback, title: "Button 1", payload: "Button-1"),
+                    FBButton(type: .postback, title: "Button 2", payload: "Button-2"),
+                    FBButton(type: .postback, title: "Button 3", payload: "Button-3")
                 ]
                 
                 let responses = [
@@ -92,11 +92,11 @@ public class SCMGameStateManager {
                 
                 let message = FBOutgoingMessage(text: "This message has buttons!", recipientId: id)
                 for button in buttons {
-                    try? message.addButton(button: button)
+                    try? message.addAttachment(attachment: button)
                 }
                 
                 for response in responses{
-                    try? message.addQuickReply(reply: response)
+                    try? message.addAttachment(attachment: response)
                 }
                 
                 message.send(handler: { (response) -> (Void) in
